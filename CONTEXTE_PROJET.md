@@ -19,7 +19,7 @@
 
 **`ml_memos.html`** — Application web single-file (HTML + CSS + JS vanilla)
 
-- Chemin local : `C:\Users\Utilisateur\Claude\Projects\ML Course\ml_memos.html`
+- Chemin local : `C:\Users\Utilisateur\Documents\Github_repos\ML-Course\ml_memos.html`
 - URL GitHub Pages : `https://ngfalo.github.io/ML-Course/ml_memos.html`
 - Repo GitHub : `github.com/ngfalo/ML-Course`
 - Taille : ~1100 lignes, ~88KB
