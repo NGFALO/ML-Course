@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Mémos — Apprends le ML pour les interviews</title>
+<style>
+  :root {
+    --bg:#f8f9ff;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;
+    --eval:#6366f1;--eval-light:#eef2ff;
+    --model:#10b981;--model-light:#ecfdf5;
+    --classif:#f59e0b;--classif-light:#fffbeb;
+    --summary:#ec4899;--summary-light:#fdf2f8;
+    --libs:#8b5cf6;--libs-light:#f5f3ff;
+    --choose:#06b6d4;--choose-light:#ecfeff;
+    --good:#10b981;--warn:#f59e0b;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  header{background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);color:white;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(99,102,241,.3);}
+  header h1{font-size:1.5rem;font-weight:800;}
+  header p{font-size:.85rem;opacity:.85;margin-top:2px;}
+  .streak-badge{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);border-radius:50px;padding:.5rem 1.2rem;text-align:center;}
+  .streak-num{font-size:1.6rem;font-weight:900;line-height:1;}
+  .streak-label{font-size:.7rem;opacity:.9;}
+  nav{background:white;border-bottom:2px solid var(--border);display:flex;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow-x:auto;}
+  nav button{padding:1rem 1.4rem;border:none;background:none;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;}
+  nav button:hover{color:var(--text);background:var(--bg);}
+  nav button.active{color:#6366f1;border-bottom-color:#6366f1;background:var(--eval-light);}
+  .score-bar{background:white;border-bottom:1px solid var(--border);padding:.7rem 2rem;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+  .score-item{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;}
+  .score-dot{width:10px;height:10px;border-radius:50%;}
+  .score-num{font-size:1.1rem;font-weight:800;}
+  main{max-width:1100px;margin:0 auto;padding:2rem;}
+  .section-title{font-size:1.4rem;font-weight:800;margin-bottom:4px;}
+  .section-desc{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;}
+  .family-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:50px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+  .pill-eval{background:var(--eval-light);color:var(--eval);}
+  .pill-model{background:var(--model-light);color:var(--model);}
+  .pill-classif{background:var(--classif-light);color:var(--classif);}
+  .pill-summary{background:var(--summary-light);color:var(--summary);}
+  .pill-libs{background:var(--libs-light);color:var(--libs);}
+  .pill-choose{background:var(--choose-light);color:var(--choose);}
+  .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .filter-btn{padding:6px 14px;border-radius:50px;border:2px solid var(--border);background:white;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);transition:all .2s;}
+  .filter-btn[data-f="all"].active{color:#6366f1;border-color:#6366f1;background:var(--eval-light);}
+  .filter-btn[data-f="eval"].active{color:var(--eval);border-color:var(--eval);background:var(--eval-light);}
+  .filter-btn[data-f="model"].active{color:var(--model);border-color:var(--model);background:var(--model-light);}
+  .filter-btn[data-f="classif"].active{color:var(--classif);border-color:var(--classif);background:var(--classif-light);}
+  .filter-btn[data-f="summary"].active{color:var(--summary);border-color:var(--summary);background:var(--summary-light);}
+  .filter-btn[data-f="libs"].active{color:var(--libs);border-color:var(--libs);background:var(--libs-light);}
+  .filter-btn[data-f="choose"].active{color:var(--choose);border-color:var(--choose);background:var(--choose-light);}
+  .search-wrap{position:relative;margin-bottom:1.2rem;}
+  .search-input{width:100%;padding:.75rem 1rem .75rem 2.8rem;border-radius:50px;border:2px solid var(--border);font-size:.9rem;background:white;outline:none;transition:border-color .2s;}
+  .search-input:focus{border-color:#6366f1;}
+  .search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--muted);}
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem;}
+  .card{background:white;border-radius:16px;border:2px solid var(--border);padding:1.4rem;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+  .card[data-family="eval"]{border-top:4px solid var(--eval);}
+  .card[data-family="model"]{border-top:4px solid var(--model);}
+  .card[data-family="classif"]{border-top:4px solid var(--classif);}
+  .card[data-family="summary"]{border-top:4px solid var(--summary);}
+  .card[data-family="libs"]{border-top:4px solid var(--libs);}
+  .card[data-family="choose"]{border-top:4px solid var(--choose);}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.8rem;gap:8px;}
+  .card-name{font-size:1.1rem;font-weight:800;}
+  .card-full{font-size:.75rem;color:var(--muted);margin-top:2px;}
+  .card-image{background:var(--bg);border-radius:10px;padding:.8rem 1rem;font-size:.88rem;margin-bottom:.8rem;line-height:1.6;border-left:4px solid;}
+  .card[data-family="eval"] .card-image{border-color:var(--eval);}
+  .card[data-family="model"] .card-image{border-color:var(--model);}
+  .card[data-family="classif"] .card-image{border-color:var(--classif);}
+  .card[data-family="summary"] .card-image{border-color:var(--summary);}
+  .card[data-family="libs"] .card-image{border-color:var(--libs);}
+  .card[data-family="choose"] .card-image{border-color:var(--choose);}
+  .img-label{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;opacity:.65;}
+  .card-rules{display:flex;flex-direction:column;gap:4px;}
+  .rule{display:flex;align-items:center;gap:8px;font-size:.82rem;padding:3px 0;}
+  .rule-val{font-weight:700;font-family:monospace;min-width:100px;font-size:.85rem;}
+  .rule-badge{padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;}
+  .good-badge{background:#d1fae5;color:#065f46;}
+  .warn-badge{background:#fef3c7;color:#92400e;}
+  .bad-badge{background:#fee2e2;color:#991b1b;}
+  .card-tip{margin-top:.8rem;padding:.6rem .8rem;border-radius:8px;font-size:.8rem;background:#f0fdf4;color:#065f46;border-left:3px solid #10b981;}
+  .quiz-mode-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .mode-btn{padding:8px 16px;border-radius:50px;border:2px solid var(--border);background:white;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);transition:all .2s;}
+  .mode-btn.active{border-color:#6366f1;color:#6366f1;background:var(--eval-light);}
+  .mode-btn[data-mode="eval"]{border-color:var(--eval);color:var(--eval);}
+  .mode-btn[data-mode="model"]{border-color:var(--model);color:var(--model);}
+  .mode-btn[data-mode="eval"].active{background:var(--eval-light);}
+  .mode-btn[data-mode="model"].active{background:var(--model-light);}
+  .quiz-card{background:white;border-radius:20px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,.08);border:2px solid var(--border);max-width:700px;margin:0 auto;}
+  .quiz-family-badge{margin-bottom:.8rem;}
+  .quiz-type-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.6rem;}
+  .quiz-question{font-size:1.15rem;font-weight:700;line-height:1.55;margin-bottom:1.4rem;}
+  .quiz-choices{display:flex;flex-direction:column;gap:10px;}
+  .choice-btn{padding:.9rem 1.2rem;border-radius:12px;border:2px solid var(--border);background:white;cursor:pointer;text-align:left;font-size:.92rem;font-weight:500;transition:all .15s;line-height:1.4;}
+  .choice-btn:hover:not(:disabled){border-color:#6366f1;background:var(--eval-light);color:#6366f1;}
+  .choice-btn.correct{border-color:var(--good)!important;background:#d1fae5!important;color:#065f46!important;font-weight:700;}
+  .choice-btn.wrong{border-color:var(--bad)!important;background:#fee2e2!important;color:#991b1b!important;}
+  .choice-btn:disabled{cursor:default;}
+  .tf-choices{display:flex;gap:1rem;margin-top:.5rem;}
+  .tf-btn{flex:1;padding:1.2rem;border-radius:14px;border:2px solid var(--border);background:white;cursor:pointer;font-size:1.1rem;font-weight:800;transition:all .15s;text-align:center;}
+  .tf-btn:hover:not(:disabled){transform:scale(1.04);}
+  .tf-btn.vrai:hover:not(:disabled){border-color:var(--good);background:#d1fae5;color:#065f46;}
+  .tf-btn.faux:hover:not(:disabled){border-color:var(--bad);background:#fee2e2;color:#991b1b;}
+  .tf-btn.correct{border-color:var(--good)!important;background:#d1fae5!important;color:#065f46!important;}
+  .tf-btn.wrong{border-color:var(--bad)!important;background:#fee2e2!important;color:#991b1b!important;}
+  .tf-btn:disabled{cursor:default;}
+  .quiz-feedback{margin-top:1.2rem;padding:1rem 1.2rem;border-radius:12px;font-size:.88rem;line-height:1.65;display:none;}
+  .quiz-feedback.show{display:block;}
+  .quiz-feedback.correct-fb{background:#d1fae5;border-left:4px solid var(--good);color:#065f46;}
+  .quiz-feedback.wrong-fb{background:#fee2e2;border-left:4px solid var(--bad);color:#7f1d1d;}
+  .quiz-controls{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;}
+  .quiz-progress{font-size:.82rem;color:var(--muted);}
+  .quiz-score-live{font-size:.88rem;font-weight:700;margin-top:4px;}
+  .sc{color:var(--good);}.sw{color:var(--bad);}
+  .btn-next{padding:.8rem 2rem;border-radius:50px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-size:.9rem;font-weight:700;cursor:pointer;display:none;box-shadow:0 4px 12px rgba(99,102,241,.4);transition:transform .1s;}
+  .btn-next:hover{transform:scale(1.03);}
+  .btn-next.show{display:block;}
+  .quiz-end{text-align:center;padding:2.5rem;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:480px;margin:0 auto;display:none;}
+  .quiz-end.show{display:block;}
+  .end-emoji{font-size:4rem;margin-bottom:1rem;}
+  .end-title{font-size:1.6rem;font-weight:900;margin-bottom:.5rem;}
+  .end-score{font-size:3rem;font-weight:900;margin:1rem 0;}
+  .btn-restart{padding:.9rem 2.5rem;border-radius:50px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-size:1rem;font-weight:700;cursor:pointer;margin-top:1rem;box-shadow:0 4px 12px rgba(99,102,241,.4);}
+  @media(max-width:600px){header{padding:1rem;}main{padding:1rem;}nav button{padding:.8rem 1rem;font-size:.78rem;}.cards-grid{grid-template-columns:1fr;}.score-bar{padding:.5rem 1rem;gap:1rem;}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🧠 ML Mémos</h1><p>Glossaire interactif + Quiz · Interview-ready</p></div>
+  <div class="streak-badge"><div class="streak-num" id="streak-display">🔥 0</div><div class="streak-label">Streak</div></div>
+</header>
+<div class="score-bar">
+  <div class="score-item"><div class="score-dot" style="background:var(--good)"></div>Correct : <span class="score-num sc" id="total-correct">0</span></div>
+  <div class="score-item"><div class="score-dot" style="background:var(--bad)"></div>Erreurs : <span class="score-num sw" id="total-wrong">0</span></div>
+  <div class="score-item"><div class="score-dot" style="background:#6366f1"></div>Score : <span class="score-num" id="total-pct" style="color:#6366f1">—</span></div>
+  <div class="score-item" style="margin-left:auto;font-weight:400;color:var(--muted)">Meilleur streak : <strong id="best-streak" style="color:var(--text)">0</strong></div>
+  <div id="sync-status" style="font-size:.75rem;color:var(--muted);transition:opacity 1s;opacity:0;margin-left:1rem;">☁️</div>
+</div>
+<nav>
+  <button class="active" onclick="showTab('glossaire')">📚 Glossaire</button>
+  <button onclick="showTab('quiz')">🎯 Quiz</button>
+</nav>
+<div id="tab-glossaire">
+<main>
+  <div class="section-title">📚 Glossaire ML</div>
+  <div class="section-desc">Image mentale, seuils et astuce pour chaque terme. Filtre par famille ou cherche directement.</div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" id="search" placeholder="Chercher… (RMSE, XGBoost, p-value, F1…)" oninput="filterCards()">
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-f="all" onclick="setFilter('all')">Tout</button>
+    <button class="filter-btn" data-f="eval" onclick="setFilter('eval')">📊 Évaluation</button>
+    <button class="filter-btn" data-f="model" onclick="setFilter('model')">🤖 Modèles</button>
+    <button class="filter-btn" data-f="classif" onclick="setFilter('classif')">🏷️ Classification</button>
+    <button class="filter-btn" data-f="summary" onclick="setFilter('summary')">📋 Summary</button>
+    <button class="filter-btn" data-f="libs" onclick="setFilter('libs')">📦 Libs</button>
+    <button class="filter-btn" data-f="choose" onclick="setFilter('choose')">🧭 Choisir</button>
+  </div>
+  <div class="cards-grid" id="cards-grid"></div>
+</main>
+</div>
+<div id="tab-quiz" style="display:none">
+<main>
+  <div class="section-title">🎯 Quiz interactif</div>
+  <div class="section-desc">4 types de questions · Streak · Score · Explication après chaque réponse</div>
+  <div class="quiz-mode-bar">
+    <button class="mode-btn active" data-mode="all" onclick="setMode('all')">🎲 Mixte</button>
+    <button class="mode-btn" data-mode="scenario" onclick="setMode('scenario')">🎬 Scénario</button>
+    <button class="mode-btn" data-mode="tf" onclick="setMode('tf')">✅ Vrai/Faux</button>
+    <button class="mode-btn" data-mode="term2def" onclick="setMode('term2def')">📖 Terme→Déf</button>
+    <button class="mode-btn" data-mode="def2term" onclick="setMode('def2term')">🔍 Déf→Terme</button>
+    <button class="mode-btn" data-mode="eval" onclick="setMode('eval')">📊 Éval seul</button>
+    <button class="mode-btn" data-mode="model" onclick="setMode('model')">🤖 Modèles seuls</button>
+  </div>
+  <div id="quiz-area">
+    <div class="quiz-card" id="quiz-card">
+      <div class="quiz-family-badge" id="qfamily"></div>
+      <div class="quiz-type-label" id="qtype-label"></div>
+      <div class="quiz-question" id="qquestion"></div>
+      <div id="qchoices"></div>
+      <div class="quiz-feedback" id="qfeedback"></div>
+      <div class="quiz-controls">
+        <div>
+          <div class="quiz-progress" id="qprogress">Question 1</div>
+          <div class="quiz-score-live" id="qscore-live"></div>
+        </div>
+        <button class="btn-next" id="btn-next" onclick="nextQuestion()">Question suivante →</button>
+      </div>
+    </div>
+    <div class="quiz-end" id="quiz-end">
+      <div class="end-emoji" id="end-emoji">🎉</div>
+      <div class="end-title" id="end-title">Bien joué !</div>
+      <div class="end-score" id="end-score"></div>
+      <div style="color:var(--muted);font-size:.9rem;margin-top:4px" id="end-streak"></div>
+      <button class="btn-restart" onclick="restartQuiz()">🔄 Rejouer</button>
+    </div>
+  </div>
+</main>
+</div>
+<script>
+const TERMS=[
+{id:'r2',name:'R²',full:'Coefficient de Détermination',family:'eval',
+image:'🎯 "Mon modèle comprend __% du problème." Fraction de la variabilité totale expliquée. Plus proche de 1 = mieux.',
+rules:[{val:'≥ 0.90',label:'Excellent ✅',type:'good'},{val:'0.70–0.89',label:'Bon ✓',type:'good'},{val:'0.50–0.69',label:'Moyen ⚠',type:'warn'},{val:'< 0.50',label:'Mauvais ❌',type:'bad'}],
+tip:"Toujours le voir avec l'écart-type : R²=0.93 ± 0.001 = parfait. R²=0.93 ± 0.10 = instable !",
+d2t:'Mesure quelle fraction de la variabilité totale est expliquée par le modèle. Entre 0 et 1.',
+t2d:['Mesure quelle fraction de la variabilité est expliquée (0–1)','Erreur moyenne en valeur absolue','Racine de l\'erreur quadratique','Mesure de stabilité entre folds'],
+scenarios:[
+{q:'R²=0.92, écart-type=0.002. Le modèle est-il bon ?',choice:'Oui — 92% expliqué et très stable',wrongs:['C\'est moyen, 0.92 insuffisant','C\'est instable','On ne peut savoir sans MAE'],answer:'R²≥0.9 = excellent, écart-type 0.002 = très stable. Excellent modèle !'},
+{q:'R²=0.45, écart-type=0.03. Que fais-tu ?',choice:'Modèle trop simple — changer d\'algo ou ajouter des features',wrongs:['Parfait','Instable — vérifier les données','Supprimer des features'],answer:'Le modèle comprend 45% du problème. Stable mais trop simple. Augmenter la complexité.'},
+],
+tf:[
+{stmt:'Un R² de 0.95 signifie que le modèle fait zéro erreur.',answer:false,explain:'R²=1.0 = zéro erreur. R²=0.95 = 95% de variance expliquée, des erreurs existent encore.'},
+{stmt:'R²=0.93 ± 0.20 est meilleur que R²=0.80 ± 0.01.',answer:false,explain:'Non ! R²=0.80 ± 0.01 est plus FIABLE. 0.93 ± 0.20 est très instable. La stabilité prime.'},
+{stmt:'Un R² de 0.30 indique un mauvais modèle dans la plupart des cas.',answer:true,explain:'Oui — 30% de variance expliquée est généralement insuffisant.'},
+]},
+{id:'mae',name:'MAE',full:'Mean Absolute Error',family:'eval',
+image:'📏 "Je me trompe en moyenne de combien ?" Moyenne des |prédit − réel|. Interprétable directement dans l\'unité des données.',
+rules:[{val:'→ 0',label:'Parfait',type:'good'},{val:'Contexte',label:'Unité = unité des données',type:'warn'}],
+tip:'MAE=$200 sur salaires à 50k = excellent. MAE=$200 sur prix à 300$ = catastrophe. Relativiser !',
+d2t:'Moyenne des erreurs absolues. Interprétable dans l\'unité des données. Traite toutes les erreurs équitablement.',
+t2d:['Moyenne des |prédit − réel| — interprétable dans l\'unité','Carré des erreurs — pénalise les grandes','Racine de la moyenne des erreurs carrées','Fraction de variance expliquée'],
+scenarios:[
+{q:'MAE=$200 sur un modèle de prix de maisons (moyenne $250k). C\'est bon ?',choice:'Oui — $200 sur $250k = 0.08%, excellent',wrongs:['Non — $200 est trop élevé','On ne sait pas sans le R²','MAE non pertinente ici'],answer:'Excellent ! $200 d\'erreur sur $250 000 = 0.08%. Très précis.'},
+],
+tf:[
+{stmt:'MAE pénalise plus les grandes erreurs que les petites.',answer:false,explain:'Non — c\'est MSE/RMSE qui pénalisent au carré. MAE traite toutes les erreurs équitablement.'},
+{stmt:'MAE = 0 signifie des prédictions parfaites.',answer:true,explain:'Oui ! MAE=0 → prédit = réel pour chaque observation.'},
+]},
+{id:'mse',name:'MSE',full:'Mean Squared Error',family:'eval',
+image:'💥 Comme MAE mais on CARRE les erreurs. Une grosse erreur pèse BEAUCOUP plus. "Zéro tolérance pour les catastrophes."',
+rules:[{val:'→ 0',label:'Parfait',type:'good'},{val:'Unité²',label:'Difficile à interpréter directement',type:'warn'}],
+tip:'Utilise MSE quand une grosse erreur est VRAIMENT coûteuse. Pour l\'interpréter → racine = RMSE.',
+d2t:'Moyenne des erreurs au carré. Pénalise fortement les grandes erreurs. Unité = (unité)².',
+t2d:['Moyenne des erreurs au carré — pénalise fortement les outliers','Moyenne des erreurs absolues','Racine de la moyenne des erreurs carrées','Fraction de variance expliquée'],
+scenarios:[
+{q:'MSE très élevée à cause de quelques prédictions extrêmes. Que ça indique ?',choice:'Des erreurs extrêmes sur quelques cas — vérifier les outliers',wrongs:['Le modèle est globalement mauvais','Utiliser MAE à la place','MSE toujours élevé, normal'],answer:'MSE amplifie les grandes erreurs. Des cas extrêmes sont très mal prédits. Vérifier les outliers.'},
+],
+tf:[
+{stmt:'MSE et MAE donnent toujours le même classement des modèles.',answer:false,explain:'Non ! MSE amplifie les grandes erreurs. Un modèle peut avoir bonne MAE mais mauvaise MSE s\'il fait quelques grosses erreurs.'},
+]},
+{id:'rmse',name:'RMSE',full:'Root Mean Squared Error',family:'eval',
+image:'📐 MSE mais on prend la racine → retour à l\'unité originale. Punit les grosses erreurs tout en restant lisible.',
+rules:[{val:'→ 0',label:'Parfait',type:'good'},{val:'> MAE',label:'Toujours (si erreurs ≠ 0)',type:'warn'},{val:'RMSE >> MAE',label:'Outliers présents ⚠',type:'bad'}],
+tip:'Si RMSE >> MAE → quelques très grosses erreurs. Checker les outliers !',
+d2t:'√MSE. Même unité que les données, sensible aux outliers. Comparer avec MAE pour détecter les outliers.',
+t2d:['√MSE — même unité, sensible aux outliers','Moyenne des erreurs absolues','Carré moyen des erreurs','Fraction de variance expliquée'],
+scenarios:[
+{q:'MAE=100€, RMSE=450€ sur des prédictions de salaires. Que se passe-t-il ?',choice:'Quelques salaires sont catastrophiquement mal prédits — outliers !',wrongs:['Le modèle est globalement mauvais','C\'est normal, RMSE = 4x MAE','Utiliser R² à la place'],answer:'RMSE >> MAE → quelques salaires très mal prédits. Erreurs extrêmes sur certains cas.'},
+],
+tf:[
+{stmt:'RMSE est toujours ≥ MAE pour le même modèle.',answer:true,explain:'Toujours vrai ! RMSE pénalise les grandes erreurs donc ≥ MAE. Égaux seulement si toutes les erreurs sont identiques.'},
+]},
+{id:'cv',name:'Cross-Validation',full:'Validation Croisée k-fold',family:'eval',
+image:'🔄 "Je découpe mes données en k morceaux, j\'entraîne k fois." Chaque fold est tour à tour le set de test. Résultat fiable.',
+rules:[{val:'k=5 ou 10',label:'Standard',type:'good'},{val:'Petit écart-type',label:'Modèle stable ✓',type:'good'},{val:'Grand écart-type',label:'Instable ⚠',type:'bad'}],
+tip:'Toujours regarder R² MOYEN ET écart-type. Bon R² + grand écart-type = peu fiable.',
+d2t:'Découpe les données en k blocs, entraîne/teste k fois, moyenne les scores. Estimation robuste de la performance.',
+t2d:['Technique k-fold : k entraînements, k scores, moyenne robuste','Séparation unique train/test','Méthode de réduction de features','Optimisation des hyperparamètres'],
+scenarios:[],
+tf:[
+{stmt:'Avec 5-fold CV, le modèle est entraîné 5 fois sur des sous-ensembles différents.',answer:true,explain:'Exactement ! 5 entraînements, 5 scores différents, on moyenne. Bien plus fiable qu\'un seul split.'},
+{stmt:'Un grand écart-type en CV signifie que le modèle est très performant.',answer:false,explain:'Non — grand écart-type = INSTABLE. Performance très variable selon les données. Signal d\'alarme.'},
+]},
+{id:'overfit',name:'Overfitting',full:'Sur-apprentissage',family:'eval',
+image:'📚 "Le modèle a appris le cours par cœur mais rate les examens." Il mémorise les données d\'entraînement et généralise mal.',
+rules:[{val:'Train >> Test',label:'Overfitting ❌',type:'bad'},{val:'Diff > 0.05',label:'Signe d\'alarme',type:'warn'},{val:'Train ≈ Test',label:'Pas d\'overfit ✓',type:'good'}],
+tip:'Solutions : régularisation L1/L2, plus de données, simplifier le modèle, early stopping, dropout.',
+d2t:'Modèle trop collé aux données d\'entraînement. Excellent sur train, médiocre sur test.',
+t2d:['Trop collé au train — excellent sur train, médiocre sur test','Trop simple — mauvais même sur train','Écart entre deux runs','Normalisation des features'],
+scenarios:[
+{q:'Train R²=0.99, Test R²=0.61. Que se passe-t-il ?',choice:'Overfitting sévère — simplifier ou régulariser',wrongs:['Parfait sur train donc ok','Underfitting — trop simple','Données manquantes'],answer:'Overfitting sévère. Le modèle mémorise les données d\'entraînement. Simplifier ou régulariser.'},
+],
+tf:[
+{stmt:'Train R²=0.75 et Test R²=0.74 indique de l\'overfitting.',answer:false,explain:'Non ! Train ≈ Test → pas d\'overfitting. L\'overfitting = Train >> Test (grande différence).'},
+]},
+{id:'underfit',name:'Underfitting',full:'Sous-apprentissage',family:'eval',
+image:'🤷 "Le modèle est trop simple et rate des patterns évidents." Mauvaises performances même sur les données d\'entraînement.',
+rules:[{val:'Train ET Test bas',label:'Underfitting ❌',type:'bad'}],
+tip:'Solutions : modèle plus complexe, plus de features, moins de régularisation.',
+d2t:'Modèle trop simple. Mauvais score même sur les données d\'entraînement. L\'inverse de l\'overfitting.',
+t2d:['Trop simple — mauvais même sur train','Trop collé au train — mémorise','Sélection de features','Méthode d\'optimisation'],
+scenarios:[],
+tf:[
+{stmt:'Un modèle qui under-fit aura un bon score sur train mais mauvais sur test.',answer:false,explain:'Non, c\'est l\'overfitting ! L\'underfitting = mauvais score sur TRAIN ET test.'},
+]},
+{id:'linreg',name:'Régression Linéaire',full:'Linear Regression',family:'model',
+image:'📈 "Je trace la droite qui colle le mieux aux points." Prédit une valeur continue. Le modèle le plus simple et interprétable.',
+rules:[{val:'Interprétable',label:'Impact de chaque feature visible',type:'good'},{val:'Suppose linéarité',label:'Fail si relation courbe',type:'warn'},{val:'Sensible aux outliers',label:'Erreurs au carré',type:'warn'}],
+tip:'Toujours commencer par là. R² < 0.6 → Random Forest. Encore insuffisant → XGBoost.',
+d2t:'Prédit une valeur continue par combinaison linéaire des features. Interprétable, rapide, baseline.',
+t2d:['Prédit une valeur continue — combinaison linéaire — baseline','Classifie des points en catégories','Ensemble d\'arbres de décision','Réseau de neurones'],
+scenarios:[
+{q:'Tu dois prédire le prix d\'une maison. Quel modèle utiliser en premier ?',choice:'Régression linéaire — simple, interprétable, baseline',wrongs:['XGBoost directement','SVM — meilleur pour la régression','Réseau de neurones — le plus précis'],answer:'Régression linéaire d\'abord. Si R² insuffisant → Random Forest puis XGBoost.'},
+],
+tf:[
+{stmt:'La régression linéaire peut prédire des catégories comme chat/chien.',answer:false,explain:'Non ! Pour des catégories = régression LOGISTIQUE ou autres classifieurs. La régression linéaire prédit des valeurs continues.'},
+]},
+{id:'logreg',name:'Régression Logistique',full:'Logistic Regression',family:'model',
+image:'🚦 Malgré le nom, c\'est un CLASSIFIEUR. "Quelle est la probabilité que ce soit OUI ?" Sortie entre 0 et 1 via la sigmoïde.',
+rules:[{val:'Sortie: 0–1',label:'Probabilité ✓',type:'good'},{val:'Interprétable',label:'Via odds ratio',type:'good'},{val:'Frontière linéaire',label:'Fail si très non-linéaire',type:'warn'}],
+tip:'Baseline idéale pour la classification. Coefficients interprétables via odds ratio exp(coeff).',
+d2t:'Classifieur qui output une probabilité entre 0 et 1. Malgré le nom, c\'est de la CLASSIFICATION.',
+t2d:['Classifieur → probabilité 0-1 via sigmoïde — interprétable','Prédit une valeur numérique continue','Ensemble de centaines d\'arbres','Réseau de neurones profond'],
+scenarios:[
+{q:'Tu dois prédire si un email est spam. Par quoi commencer ?',choice:'Régression logistique — baseline classique pour binaire',wrongs:['Régression linéaire — pour les valeurs continues','K-Means — pour les emails','PCA — réduit les dimensions'],answer:'Régression logistique. Simple, interprétable, souvent compétitive pour la classification binaire.'},
+],
+tf:[
+{stmt:'La régression logistique peut retourner une valeur comme 1500.',answer:false,explain:'Non — la sortie est TOUJOURS entre 0 et 1 (sigmoïde). Jamais de valeurs hors [0,1].'},
+]},
+{id:'dt',name:'Arbre de Décision',full:'Decision Tree',family:'model',
+image:'🌳 "Si age > 30 ET revenu > 50k ALORS client premium." Série de questions oui/non. Très lisible par un humain.',
+rules:[{val:'Très interprétable',label:'Chaque règle est visible',type:'good'},{val:'Overfit facile',label:'Sans max_depth',type:'bad'},{val:'Instable',label:'Change beaucoup avec les données',type:'warn'}],
+tip:'Seul : souvent overfit. En ensemble (Random Forest, XGBoost) : très puissant. max_depth=3-5 pour rester lisible.',
+d2t:'Série de règles if/else sur les features. Très interprétable mais instable et overfit sans limite de profondeur.',
+t2d:['Série de règles if/else — très lisible, instable seul','Centaines d\'arbres en parallèle','Arbres en séquence corrigeant les erreurs','Réseau de couches cachées'],
+scenarios:[],
+tf:[
+{stmt:'Un arbre de décision sans limite de profondeur généralise parfaitement.',answer:false,explain:'Non — sans max_depth, il mémorise chaque point (overfitting sévère). R² train ≈ 1.0 mais test = médiocre.'},
+]},
+{id:'rf',name:'Random Forest',full:'Forêt Aléatoire',family:'model',
+image:'🌲🌲🌲 "100+ arbres différents, chacun vote." Chaque arbre voit un sous-ensemble aléatoire → diversité → robustesse.',
+rules:[{val:'n_estimators',label:'100–500 arbres',type:'good'},{val:'Peu de tuning',label:'Marche bien out-of-the-box',type:'good'},{val:'Lent en prédiction',label:'100 arbres à traverser',type:'warn'}],
+tip:'Excellent choix par défaut. feature_importances_ pour voir quelles features comptent.',
+d2t:'Ensemble de nombreux arbres de décision sur sous-ensembles aléatoires. Vote majoritaire. Robuste.',
+t2d:['Ensemble d\'arbres sur sous-ensembles aléatoires — vote majoritaire','Un seul arbre profond','Arbres en séquence','Réseau récurrent'],
+scenarios:[
+{q:'Données tabulaires, 50k lignes, features mixtes. Pas d\'idée du meilleur modèle. Tu choisis ?',choice:'Random Forest — robuste, peu de tuning, bon par défaut',wrongs:['Réseau de neurones — toujours le plus précis','SVM — idéal pour grandes données','Régression linéaire — tabulaire = toujours linéaire'],answer:'Random Forest. Marche bien out-of-the-box, peu de tuning, robuste, donne les feature importances.'},
+],
+tf:[
+{stmt:'Random Forest peut faire de la régression ET de la classification.',answer:true,explain:'Oui ! RandomForestClassifier et RandomForestRegressor. Même principe, sorties différentes.'},
+]},
+{id:'xgb',name:'XGBoost',full:'Extreme Gradient Boosting',family:'model',
+image:'🚀 "Chaque arbre corrige les erreurs du précédent." Arbres en SÉRIE (boosting). Champion des compétitions Kaggle sur tabulaire.',
+rules:[{val:'learning_rate',label:'0.01–0.3',type:'good'},{val:'n_estimators',label:'100–1000',type:'good'},{val:'max_depth',label:'3–8',type:'good'},{val:'Plus de tuning',label:'Que Random Forest',type:'warn'}],
+tip:'Meilleur sur tabulaire. Utiliser early_stopping pour éviter l\'overfit.',
+d2t:'Gradient boosting : arbres en séquence où chaque arbre corrige les erreurs du précédent. Champion Kaggle.',
+t2d:['Arbres en séquence corrigeant les erreurs — champion Kaggle tabulaire','Arbres en parallèle avec vote','Réseau de neurones pour images','Algorithme de clustering'],
+scenarios:[
+{q:'Compétition Kaggle, données tabulaires. Tu veux maximiser le score. Ton choix ?',choice:'XGBoost — standard de facto pour les compétitions tabulaires',wrongs:['Régression logistique — toujours la baseline','KNN — simple et efficace','Réseau de neurones — meilleur pour tout'],answer:'XGBoost (ou LightGBM). Champion des compétitions sur données tabulaires.'},
+],
+tf:[
+{stmt:'XGBoost entraîne tous ses arbres en même temps (en parallèle).',answer:false,explain:'Non — XGBoost = BOOSTING = arbres en SÉRIE. Chaque arbre apprend des erreurs du précédent. Random Forest lui entraîne en parallèle.'},
+]},
+{id:'lgbm',name:'LightGBM',full:'Light Gradient Boosting Machine',family:'model',
+image:'⚡ "XGBoost mais 10x plus rapide." Microsoft. Stratégie leaf-wise. Excellent sur grandes données.',
+rules:[{val:'Très rapide',label:'10x+ que XGBoost',type:'good'},{val:'Grands datasets',label:'> 100k lignes',type:'good'},{val:'Overfit plus vite',label:'Sur petits datasets',type:'warn'}],
+tip:'Préférer LightGBM sur grands datasets (>100k lignes). Petits datasets → XGBoost ou Random Forest.',
+d2t:'Gradient boosting rapide (Microsoft). Leaf-wise. 10x+ plus rapide qu\'XGBoost. Pour big data.',
+t2d:['Gradient boosting rapide Microsoft — leaf-wise, big data','XGBoost amélioré par Google','Réseau de neurones léger mobile','Forêt aléatoire optimisée'],
+scenarios:[],
+tf:[
+{stmt:'LightGBM est généralement plus rapide à entraîner que XGBoost.',answer:true,explain:'Vrai ! Stratégie leaf-wise + optimisations → 10x+ plus rapide sur grands datasets.'},
+]},
+{id:'svm',name:'SVM',full:'Support Vector Machine',family:'model',
+image:'✂️ "Je cherche la frontière qui sépare les classes avec le PLUS GRAND ESPACE possible." Marges maximales. Kernel trick pour non-linéaire.',
+rules:[{val:'Kernel RBF',label:'Bon pour non-linéaire',type:'good'},{val:'Lent sur big data',label:'O(n²) ou O(n³)',type:'bad'},{val:'Normaliser d\'abord',label:'Très sensible à l\'échelle',type:'warn'}],
+tip:'Excellent sur petits datasets riches. Inutilisable sur >100k lignes.',
+d2t:'Classifieur à marge maximale. Kernel trick pour non-linéaire. Bon sur petits datasets, lent sur big data.',
+t2d:['Frontière à marge maximale — kernel trick — petits datasets','Ensemble d\'arbres votant','Réseau de neurones convolutif','Modèle probabiliste'],
+scenarios:[],
+tf:[
+{stmt:'SVM fonctionne très bien sur des datasets de 5 millions de lignes.',answer:false,explain:'Non — SVM est O(n²) ou O(n³). Sur big data, inutilisable. Privilégier XGBoost / LightGBM.'},
+]},
+{id:'knn',name:'KNN',full:'K-Nearest Neighbors',family:'model',
+image:'👥 "Montre-moi tes k voisins les plus proches et je prédis comme la majorité." Aucun entraînement — tout au moment de prédire.',
+rules:[{val:'k petit',label:'Overfit',type:'warn'},{val:'k grand',label:'Underfit',type:'warn'},{val:'k=√n',label:'Règle empirique',type:'good'}],
+tip:'Normaliser ABSOLUMENT. Lent en prédiction (calcule toutes les distances).',
+d2t:'Prédit en regardant les k voisins les plus proches. Aucune phase d\'entraînement. Lent à prédire.',
+t2d:['Prédit selon les k voisins — aucun entraînement, lent à prédire','Ensemble d\'arbres','Réseau récurrent pour séquences','Algorithme de clustering'],
+scenarios:[],
+tf:[
+{stmt:'KNN a une phase d\'entraînement longue mais prédit rapidement.',answer:false,explain:'C\'est l\'inverse ! Aucun entraînement mais PRÉDICTION lente (calcule toutes les distances).'},
+]},
+{id:'kmeans',name:'K-Means',full:'K-Means Clustering',family:'model',
+image:'🔵🟡🔴 "Je regroupe les points en k clusters." Non-supervisé : pas de labels, on découvre des groupes naturels.',
+rules:[{val:'Méthode coude',label:'Pour choisir k optimal',type:'good'},{val:'Non-supervisé',label:'Pas de labels nécessaires',type:'good'},{val:'Normaliser',label:'Avant utilisation',type:'warn'}],
+tip:'Utiliser la méthode du coude (elbow) pour trouver le bon k.',
+d2t:'Algorithme non-supervisé qui groupe les données en k clusters selon la similarité géométrique.',
+t2d:['Clustering non-supervisé en k groupes — pas de labels','Classifieur supervisé avec k voisins','Ensemble de k arbres','Réseau avec k couches'],
+scenarios:[],
+tf:[
+{stmt:'K-Means est supervisé car il utilise les labels pour former des groupes.',answer:false,explain:'Non — K-Means est NON-SUPERVISÉ. Il ne voit aucun label. Il groupe selon la similitude géométrique.'},
+]},
+{id:'nn',name:'Réseau de Neurones',full:'Neural Network / Deep Learning',family:'model',
+image:'🧠 "Des couches de neurones artificiels qui apprennent des représentations complexes." SOTA pour images, texte, son, vidéo.',
+rules:[{val:'Beaucoup de data',label:'> 10k lignes minimum',type:'warn'},{val:'GPU requis',label:'Pour l\'entraînement',type:'warn'},{val:'Black box',label:'Peu interprétable',type:'warn'},{val:'SOTA',label:'Images, texte, audio',type:'good'}],
+tip:'Overkill sur données tabulaires. Indispensable pour images, NLP, son.',
+d2t:'Couches de neurones artificiels. Black box mais SOTA pour images/texte/audio. Nécessite GPU et big data.',
+t2d:['Couches de neurones — SOTA images/texte, GPU, big data','Ensemble d\'arbres','Clustering non-supervisé','Modèle linéaire interprétable'],
+scenarios:[
+{q:'Tu dois classifier 500 000 photos de chats et chiens. Ton modèle ?',choice:'CNN — réseau convolutif, standard pour la vision',wrongs:['Random Forest — meilleur sur images','SVM — idéal pour images','Régression logistique — commencer simple'],answer:'CNN (réseau convolutif). Images en grande quantité → deep learning est le choix naturel.'},
+],
+tf:[
+{stmt:'Un réseau de neurones est toujours le meilleur modèle quelle que soit la tâche.',answer:false,explain:'Non ! Sur données tabulaires, XGBoost/LightGBM battent souvent les réseaux de neurones.'},
+]},
+{id:'accuracy',name:'Accuracy',full:'Précision globale',family:'classif',
+image:'✅ "Sur 100 prédictions, combien ai-je eu juste ?" (VP + VN) / Total. Simple mais trompeuse sur données déséquilibrées.',
+rules:[{val:'> 0.90',label:'Généralement bon',type:'good'},{val:'Classes déséquilibrées',label:'INUTILE — utiliser F1/AUC',type:'bad'}],
+tip:'PIÈGE : 99% de transactions légales → "pas fraude" tout le temps = 99% accuracy mais 0 fraude détectée !',
+d2t:'(VP+VN)/Total. Simple mais inutile si classes déséquilibrées. Toujours vérifier le ratio des classes.',
+t2d:['(VP+VN)/Total — trompeur si classes déséquilibrées','VP/(VP+FP) — qualité des alertes','VP/(VP+FN) — taux de détection','2×(P×R)/(P+R)'],
+scenarios:[
+{q:'Détection de fraude : 99% des transactions sont légales. Ton modèle dit "pas fraude" tout le temps. Accuracy = ?',choice:'99% — mais le modèle est nul, il ne détecte aucune fraude !',wrongs:['0% — détecte rien donc 0','50% — entre les deux','Impossible à calculer'],answer:'Accuracy = 99% mais le modèle est inutile. Regarder F1/Recall/AUC.'},
+],
+tf:[
+{stmt:'Sur un dataset avec 95% de classe positive, accuracy 95% = excellent modèle.',answer:false,explain:'Non ! Un modèle qui prédit TOUJOURS "positif" atteint 95% d\'accuracy. Regarder Precision, Recall, F1.'},
+]},
+{id:'precision',name:'Precision',full:'Positive Predictive Value',family:'classif',
+image:'🎯 "Quand je dis OUI, j\'ai raison combien de fois ?" VP / (VP + FP). Qualité des alertes.',
+rules:[{val:'Haute',label:'Peu de fausses alarmes ✓',type:'good'},{val:'Trade-off',label:'Precision vs Recall',type:'warn'}],
+tip:'Priorité si FP coûtent cher : spam (email important supprimé), alertes médicales inutiles...',
+d2t:'VP/(VP+FP). Sur tous les OUI prédits, combien sont vrais. Minimise les fausses alarmes.',
+t2d:['VP/(VP+FP) — qualité des positifs prédits — minimise fausses alarmes','VP/(VP+FN) — taux de détection','(VP+VN)/Total','2×(P×R)/(P+R)'],
+scenarios:[
+{q:'Filtre anti-spam : mieux vaut rater des spams que supprimer de vrais emails. Optimiser quoi ?',choice:'Precision — éviter de classer de vrais emails comme spam',wrongs:['Recall — détecter tous les spams','Accuracy — précision globale','F1 — équilibre'],answer:'Precision. Quand le modèle dit "spam", c\'est VRAIMENT un spam. FP coûtent cher ici.'},
+],
+tf:[
+{stmt:'Precision=1.0 signifie que le modèle détecte tous les cas positifs.',answer:false,explain:'Non ! Precision=1.0 = quand je dis OUI j\'ai toujours raison. Mais je pourrais rater plein de positifs (Recall bas).'},
+]},
+{id:'recall',name:'Recall',full:'Rappel / Sensibilité / TPR',family:'classif',
+image:'🔍 "Sur tous les vrais cas, combien j\'en ai trouvés ?" VP / (VP + FN). Taux de détection.',
+rules:[{val:'Haut',label:'Peu de cas manqués ✓',type:'good'},{val:'Critique si FN coûteux',label:'Médical, sécurité...',type:'warn'}],
+tip:'Recall prioritaire si rater un cas = danger (cancer, fraude, feu). "Mieux vaut fausse alarme que cas raté."',
+d2t:'VP/(VP+FN). Sur tous les vrais positifs, combien j\'en ai détectés. Priorité si rater un cas est grave.',
+t2d:['VP/(VP+FN) — taux de détection des vrais cas','VP/(VP+FP) — qualité des alertes','(VP+VN)/Total','√MSE'],
+scenarios:[
+{q:'Détection de cancer : manquer un cancer est catastrophique. Optimiser quoi ?',choice:'Recall — ne rater aucun cancer, même si fausses alarmes',wrongs:['Precision — minimiser les fausses alarmes','Accuracy — maximiser globalement','F1 — équilibre'],answer:'Recall. Détecter TOUS les cancers même si ça génère des fausses alarmes vérifiées ensuite.'},
+],
+tf:[
+{stmt:'Recall=1.0 avec Precision=0.01 est un excellent modèle de détection de cancer.',answer:false,explain:'Recall=1.0 = détecte tous les cancers ✓ MAIS Precision=0.01 = 99% des alarmes sont fausses. Le modèle dit "cancer" à tout le monde !'},
+]},
+{id:'f1',name:'F1 Score',full:'F1 Score — Moyenne Harmonique',family:'classif',
+image:'⚖️ "La moyenne harmonique de Precision et Recall." Force l\'équilibre entre les deux. Idéal pour classes déséquilibrées.',
+rules:[{val:'> 0.85',label:'Très bon ✓',type:'good'},{val:'0.65–0.84',label:'Acceptable',type:'warn'},{val:'< 0.60',label:'Mauvais ❌',type:'bad'}],
+tip:'Si Precision et Recall sont très déséquilibrés, F1 reste bas. Il punit le déséquilibre.',
+d2t:'2×(Precision×Recall)/(Precision+Recall). Harmonie P/R. Idéal pour classes déséquilibrées.',
+t2d:['2×(P×R)/(P+R) — équilibre precision et recall','Somme de P et R','VP/(VP+FP)','VP/(VP+FN)'],
+scenarios:[],
+tf:[
+{stmt:'F1=0.90 garantit que Precision et Recall sont tous les deux > 0.80.',answer:false,explain:'Pas garanti, mais F1 force un équilibre. Ex: P=0.82, R=0.99 → F1=0.90.'},
+]},
+{id:'auc',name:'AUC-ROC',full:'Area Under ROC Curve',family:'classif',
+image:'📈 "À quel point mon modèle distingue-t-il les classes ?" Surface sous la courbe TPR vs FPR. Indépendant du seuil.',
+rules:[{val:'AUC = 1.0',label:'Parfait ✓',type:'good'},{val:'AUC > 0.90',label:'Excellent',type:'good'},{val:'AUC = 0.5',label:'= hasard ❌',type:'bad'},{val:'AUC < 0.5',label:'Pire que le hasard !',type:'bad'}],
+tip:'Permet de comparer des modèles sans fixer de seuil. Indépendant du déséquilibre des classes.',
+d2t:'Surface sous courbe ROC. Mesure la capacité à distinguer les classes, indépendamment du seuil.',
+t2d:['Surface sous courbe ROC — distingue les classes, seuil-indépendant','Accuracy à seuil fixe','F1 moyenné sur tous seuils','Précision des positifs'],
+scenarios:[],
+tf:[
+{stmt:'AUC=0.5 signifie que le modèle est correct 50% du temps.',answer:false,explain:'AUC=0.5 = le modèle ne fait pas mieux que du hasard aléatoire. Il n\'a rien appris.'},
+]},
+{id:'confmat',name:'Matrice de Confusion',full:'Confusion Matrix',family:'classif',
+image:'📊 Tableau 2×2 : VP (bon positif), VN (bon négatif), FP (fausse alarme), FN (cas raté). La carte complète des erreurs.',
+rules:[{val:'Diagonale = bon',label:'VP et VN',type:'good'},{val:'Hors diagonale',label:'FP et FN = erreurs',type:'bad'}],
+tip:'Toujours regarder la matrice, pas juste l\'accuracy. Elle révèle QUEL TYPE d\'erreur le modèle fait.',
+d2t:'Tableau VP/FP/VN/FN. Révèle le type d\'erreurs du modèle. Diagonale = bonnes prédictions.',
+t2d:['Tableau VP/FP/VN/FN — type d\'erreurs — diagonale = bonnes prédictions','Score unique de performance','Courbe TPR vs FPR','Graphique de perte'],
+scenarios:[],
+tf:[
+{stmt:'Dans une matrice de confusion, on veut maximiser les valeurs sur la diagonale.',answer:true,explain:'Exactement ! Diagonale = VP et VN (bonnes prédictions). Hors-diagonale = FP et FN (erreurs).'},
+]},
+{id:'coeff',name:'Coefficient (β)',full:'Coefficient de régression',family:'summary',
+image:'📊 "Si X augmente de 1, Y change de β." β=0.5 pour les m² : chaque m² supplémentaire ajoute 0.5k€ au prix.',
+rules:[{val:'β > 0',label:'Impact positif',type:'good'},{val:'β < 0',label:'Impact négatif',type:'warn'},{val:'β ≈ 0',label:'Peu d\'impact (vérifier p-value)',type:'warn'}],
+tip:'Toujours regarder signe ET magnitude. Et vérifier p-value < 0.05 avant d\'interpréter !',
+d2t:'Quantifie l\'impact d\'une feature sur Y. Si X+1 alors Y+β. Impact unitaire de la feature.',
+t2d:['Impact d\'une feature : si X+1 alors Y+β','Probabilité que le coeff soit dû au hasard','Racine de l\'erreur résiduelle','Qualité globale du modèle'],
+scenarios:[],
+tf:[
+{stmt:'Un coefficient de −3 signifie que la feature a un impact positif.',answer:false,explain:'Non ! β<0 = impact NÉGATIF. Quand cette feature augmente, Y diminue.'},
+]},
+{id:'pvalue',name:'p-value',full:'Probabilité de significativité',family:'summary',
+image:'🎲 "Quelle est la probabilité que ce résultat soit dû au hasard ?" Petit p = difficile à expliquer par le hasard = significatif.',
+rules:[{val:'p < 0.05',label:'Significatif ✓',type:'good'},{val:'p < 0.01',label:'Très significatif ✓✓',type:'good'},{val:'p > 0.05',label:'Non significatif ⚠',type:'warn'},{val:'p > 0.10',label:'À exclure du modèle',type:'bad'}],
+tip:'"Le seuil de 5%" est standard mais arbitraire. Contextualiser !',
+d2t:'Probabilité d\'obtenir ce résultat par hasard. p<0.05 = significatif (improbable par hasard).',
+t2d:['Proba que le résultat soit dû au hasard — p<0.05 = significatif','Impact chiffré d\'une feature','Qualité globale du modèle','Mesure d\'erreur résiduelle'],
+scenarios:[
+{q:'p-value d\'une feature = 0.003. Que conclure ?',choice:'Feature très significative — impact non dû au hasard (p<0.01)',wrongs:['Feature à enlever — p trop petit = problème','Feature à surveiller — proche de 0.05','On ne peut rien conclure sans le coefficient'],answer:'Feature statistiquement très significative. Proba que ce soit du hasard = 0.3%. On la garde.'},
+],
+tf:[
+{stmt:'p-value > 0.05 prouve que la feature n\'a aucun impact sur Y.',answer:false,explain:'Non — p>0.05 signifie qu\'on ne peut pas rejeter l\'hypothèse nulle à 95%. Pas une preuve d\'absence d\'effet.'},
+]},
+{id:'odds',name:'Odds Ratio',full:'Rapport de Cotes',family:'summary',
+image:'🃏 "Combien de fois plus probable ?" OR=3 pour fumeur → fumeurs ont 3x plus de chances de la maladie. exp(coeff logistique).',
+rules:[{val:'OR > 1',label:'Facteur de risque — augmente la proba',type:'warn'},{val:'OR < 1',label:'Facteur protecteur — diminue la proba',type:'good'},{val:'OR = 1',label:'Aucun effet',type:'warn'}],
+tip:'exp(coefficient) = odds ratio. Coeff logistique de 1.1 → OR = e^1.1 ≈ 3. OR=0.4 → −60%.',
+d2t:'Dans la régression logistique, multiplie la probabilité d\'un événement. OR=3 = 3x plus probable.',
+t2d:['Multiplicateur de probabilité — OR=3 = 3x plus probable — exp(coeff)','Probabilité directe 0–1','Différence de probabilité entre groupes','Coefficient de régression linéaire'],
+scenarios:[
+{q:'OR=0.4 pour "sport régulier" dans un modèle de maladie cardiaque. Interprétation ?',choice:'Sport = facteur protecteur — réduit de 60% les chances de maladie',wrongs:['Sport = facteur de risque','OR=0.4 non significatif','Sport réduit de 40% (OR direct)'],answer:'OR<1 = facteur protecteur. OR=0.4 → réduit de 60% les chances. (1−0.4 = 0.6 = 60% de réduction)'},
+],
+tf:[
+{stmt:'Un odds ratio de 1 signifie que la variable double les chances.',answer:false,explain:'Non — OR=1 = AUCUN EFFET. OR=2 = double les chances.'},
+]},
+{id:'tstat',name:'t-statistique',full:'t-statistic',family:'summary',
+image:'📏 "À combien d\'écarts-types le coefficient est-il de zéro ?" |t| > 2 ≈ significatif (p<0.05 environ).',
+rules:[{val:'|t| > 2',label:'Significatif (~p<0.05)',type:'good'},{val:'|t| > 3',label:'Très significatif',type:'good'},{val:'|t| < 1.5',label:'Pas significatif ❌',type:'bad'}],
+tip:'La p-value et le t-stat sont liés. |t| grand → p petit. Les deux sont affichés dans un summary.',
+d2t:'Coefficient/écart-type. Distance à 0 en écarts-types. |t|>2 ≈ significatif. Lié à la p-value.',
+t2d:['Coefficient/std — distance à 0 en écarts-types — |t|>2 significatif','Probabilité que le coeff soit nul','Multiplicateur d\'une feature','Variance expliquée'],
+scenarios:[],
+tf:[
+{stmt:'Un t-stat de −4.5 indique une feature non significative car négatif.',answer:false,explain:'Non ! Le SIGNE indique la direction. La VALEUR ABSOLUE indique la significativité. |−4.5|=4.5 >> 2 → très significatif.'},
+]},
+{id:'aic',name:'AIC / BIC',full:'Akaike / Bayesian Information Criterion',family:'summary',
+image:'⚖️ "Qualité du modèle pénalisée par sa complexité." Récompense l\'ajustement, punit les features inutiles.',
+rules:[{val:'AIC bas',label:'Meilleur modèle ✓',type:'good'},{val:'ΔAIC > 10',label:'Modèle clairement meilleur',type:'good'},{val:'Relatif',label:'Comparer modèles entre eux',type:'warn'}],
+tip:'Utiliser pour COMPARER des modèles sur les mêmes données. BIC pénalise plus les features que AIC.',
+d2t:'Critère comparatif entre modèles. Plus bas = meilleur. Pénalise la complexité (features inutiles).',
+t2d:['Critère comparatif — plus bas = meilleur — pénalise la complexité','Score de qualité absolu 0–1','Erreur résiduelle','Probabilité du modèle'],
+scenarios:[],
+tf:[
+{stmt:'Un AIC de 245 est toujours meilleur qu\'un AIC de 312.',answer:true,explain:'Oui — pour AIC, plus bas = meilleur (en comparant des modèles sur les mêmes données).'},
+]},
+{id:'intercept',name:'Intercept',full:'Constante / Biais',family:'summary',
+image:'📍 "La valeur de Y quand TOUTES les features sont à 0." Le point de départ de la droite de régression.',
+rules:[{val:'Contextuel',label:'Dépend du domaine',type:'warn'},{val:'Souvent absurde',label:'"Prix si surface=0" = sans sens',type:'warn'}],
+tip:'L\'intercept calibre le modèle. Souvent peu interprétable en pratique. Se concentrer sur les coefficients.',
+d2t:'Valeur de Y quand toutes les features = 0. Point de départ du modèle. Calibre la baseline.',
+t2d:['Valeur de Y quand toutes les features = 0 — calibre le modèle','Impact d\'une feature quand elle vaut 1','Probabilité sans données','Erreur sur la constante'],
+scenarios:[],
+tf:[
+{stmt:'L\'intercept représente l\'impact de la feature la plus importante.',answer:false,explain:'Non — l\'intercept est la valeur de Y quand TOUTES les features = 0. Aucune feature spécifique.'},
+]},
+{id:'sklearn',name:'Scikit-Learn',full:'sklearn',family:'libs',
+image:'🔧 "La boîte à outils ML standard Python." Tous les algorithmes classiques, preprocessing, évaluation. API unifiée : fit() / predict() / score().',
+rules:[{val:'Tabulaire',label:'Parfait',type:'good'},{val:'Pas deep learning',label:'Utiliser PyTorch/TF',type:'warn'},{val:'API unifiée',label:'fit / predict / score',type:'good'}],
+tip:'Toujours commencer par sklearn. Si besoin de GPU/deep learning → migrer vers PyTorch ou TensorFlow.',
+d2t:'Bibliothèque ML Python standard : tous les algos classiques, preprocessing, évaluation. API fit/predict/score.',
+t2d:['Bibliothèque ML Python standard — algos classiques, fit/predict/score','Framework deep learning Google','Framework deep learning Meta','Bibliothèque de visualisation'],
+scenarios:[],
+tf:[
+{stmt:'Scikit-Learn supporte l\'entraînement de réseaux de neurones profonds sur GPU.',answer:false,explain:'Non — sklearn a MLPClassifier basique mais pas de GPU natif. Pour le deep learning → PyTorch ou TensorFlow.'},
+]},
+{id:'pytorch',name:'PyTorch',full:'PyTorch (Meta)',family:'libs',
+image:'🔥 "Define-by-run : le graphe se construit pendant l\'exécution." Très pythonique. Standard de la recherche en deep learning.',
+rules:[{val:'Recherche',label:'Standard académique',type:'good'},{val:'GPU natif',label:'CUDA intégré',type:'good'},{val:'Plus bas niveau',label:'Que Keras',type:'warn'}],
+tip:'Pour la recherche et les projets custom. torchvision (images), HuggingFace (NLP). Préféré en entreprises tech.',
+d2t:'Framework DL de Meta. Graphe dynamique. Standard en recherche. GPU natif. Pythonique.',
+t2d:['Framework DL Meta — graphe dynamique, favori recherche, GPU natif','Framework DL Google','Bibliothèque ML classique','Framework de serving ML'],
+scenarios:[
+{q:'Tu veux implémenter un Transformer custom pour du NLP de recherche. Ton choix ?',choice:'PyTorch + HuggingFace — standard recherche NLP',wrongs:['Scikit-Learn — supporte les Transformers','Excel avec formules ML','Régression logistique sklearn'],answer:'PyTorch. Standard de la recherche, graphe dynamique, très flexible. HuggingFace en complément.'},
+],
+tf:[
+{stmt:'PyTorch et TensorFlow ne peuvent pas être utilisés dans le même projet.',answer:false,explain:'On peut utiliser les deux, mais en pratique on choisit. PyTorch = recherche, TF/Keras = production.'},
+]},
+{id:'tensorflow',name:'TensorFlow / Keras',full:'TensorFlow (Google)',family:'libs',
+image:'🌊 "Framework DL de Google avec API haut-niveau Keras." Rapide à prototyper. Fort pour la production et le déploiement.',
+rules:[{val:'Keras',label:'Rapide à prototyper',type:'good'},{val:'TF Serving',label:'Déploiement production',type:'good'},{val:'TFLite',label:'Mobile/Edge',type:'good'}],
+tip:'Keras pour prototyper vite. TF Serving pour déployer. TFLite pour mobile.',
+d2t:'Framework DL Google. Keras = API haut-niveau simple. Fort pour la production et le déploiement mobile.',
+t2d:['Framework DL Google — Keras simple, fort en production','Framework DL Meta','Bibliothèque ML classique','Framework de visualization'],
+scenarios:[],
+tf:[
+{stmt:'Keras est une bibliothèque indépendante de TensorFlow.',answer:false,explain:'Maintenant intégré : tf.keras fait partie de TensorFlow 2.x. Keras est l\'API haut-niveau officielle de TensorFlow.'},
+]},
+{id:'pandas',name:'Pandas',full:'Python Data Analysis Library',family:'libs',
+image:'🐼 "Excel mais en Python." DataFrames pour charger, nettoyer et explorer les données. Indispensable avant le ML.',
+rules:[{val:'df.describe()',label:'Stats de base',type:'good'},{val:'df.isnull()',label:'Vérifier les NaN',type:'good'},{val:'df.corr()',label:'Corrélations',type:'good'}],
+tip:'Toujours explorer avec pandas AVANT de modéliser. df.info(), df.describe(), df.corr() = tes meilleurs amis.',
+d2t:'Manipulation de DataFrames Python. Chargement, nettoyage, exploration des données. Avant l\'étape ML.',
+t2d:['DataFrames Python — chargement, nettoyage, exploration','Framework deep learning','Bibliothèque de modèles ML','Outil de visualisation'],
+scenarios:[],
+tf:[
+{stmt:'Pandas est conçu pour entraîner des modèles de machine learning.',answer:false,explain:'Non — pandas est pour la MANIPULATION de données. Pour entraîner → sklearn, XGBoost, PyTorch...'},
+]},
+{id:'numpy',name:'NumPy',full:'Numerical Python',family:'libs',
+image:'🔢 "Arrays numériques ultra-rapides." La fondation de tout l\'écosystème ML Python. Code C compilé sous le capot.',
+rules:[{val:'Vectorisé',label:'100x plus rapide que boucles Python',type:'good'},{val:'Base de tout',label:'sklearn, pandas, PyTorch l\'utilisent',type:'good'}],
+tip:'Tu ne l\'utilises pas souvent directement mais il est partout dessous.',
+d2t:'Arrays numériques ultra-rapides en Python. Fondation de sklearn, pandas, PyTorch. Opérations vectorisées.',
+t2d:['Arrays numériques ultra-rapides — fondation de tout l\'éco ML','DataFrames','Framework deep learning','Visualisation'],
+scenarios:[],
+tf:[
+{stmt:'NumPy est plus rapide que les listes Python pour les calculs numériques.',answer:true,explain:'Vrai ! NumPy utilise C compilé + vectorisation SIMD. Multiplier 1M de nombres : NumPy = ms, liste Python = secondes.'},
+]},
+{id:'huggingface',name:'Hugging Face',full:'Hugging Face Transformers',family:'libs',
+image:'🤗 "Le GitHub des modèles IA." Des milliers de modèles pré-entraînés (BERT, GPT, LLaMA…) prêts à utiliser ou fine-tuner.',
+rules:[{val:'pipeline()',label:'Modèle en 3 lignes',type:'good'},{val:'Fine-tuning',label:'>>> entraîner de zéro',type:'good'}],
+tip:'Pour le NLP en 2024 : HuggingFace d\'abord. Fine-tuner un modèle existant > entraîner de zéro.',
+d2t:'Hub de modèles pré-entraînés + bibliothèque Transformers. Standard pour NLP/Vision en 2024.',
+t2d:['Hub de modèles pré-entraînés — BERT, GPT, LLaMA prêts à l\'emploi','Framework deep learning de base','Bibliothèque de visualisation','Outil de déploiement'],
+scenarios:[],
+tf:[
+{stmt:'Hugging Face permet d\'utiliser des modèles comme GPT sans les ré-entraîner de zéro.',answer:true,explain:'Exactement ! Inference directe ou fine-tuning sur des milliers de modèles. Gain de temps et compute énorme.'},
+]},
+{id:'ch_regression',name:'Choisir : Régression',full:'Y continu → quel modèle ?',family:'choose',
+image:'🎯 La SORTIE est une valeur continue (prix, température, salaire…). Commencer simple, complexifier si besoin.',
+rules:[{val:'Baseline',label:'Régression Linéaire',type:'good'},{val:'Performance',label:'Random Forest → XGBoost',type:'good'},{val:'Big data',label:'LightGBM',type:'good'},{val:'Interprétabilité',label:'LinReg ou DT petit',type:'good'}],
+tip:'Toujours commencer par la régression linéaire. R² < 0.6 → Random Forest. Encore insuffisant → XGBoost.',
+d2t:'Problème où Y est continu (prix, température…). Baseline = LinReg, performance = XGBoost/RF. Métriques : R², MAE, RMSE.',
+t2d:['Sortie continue → LinReg baseline, XGBoost performance, R²/MAE/RMSE métriques','Sortie catégorielle — F1, Accuracy','Sans labels — clustering, PCA','Séquences — RNN, LSTM'],
+scenarios:[
+{q:'Prédire un salaire annuel. Données tabulaires, 10k lignes. Chemin optimal ?',choice:'LinReg baseline → RF si besoin → XGBoost pour max performance',wrongs:['Deep learning directement','K-Means pour grouper les salaires','Régression logistique — bien pour le continu'],answer:'1) Régression linéaire (baseline) 2) Si R²<0.7 → Random Forest 3) Si encore mieux voulu → XGBoost.'},
+],
+tf:[
+{stmt:'Pour prédire un âge (valeur continue), on doit utiliser la régression logistique.',answer:false,explain:'Non — la régression logistique est pour la CLASSIFICATION. Pour valeur continue → régression linéaire, RF, XGBoost.'},
+]},
+{id:'ch_classification',name:'Choisir : Classification',full:'Y catégoriel → quel modèle ?',family:'choose',
+image:'🏷️ La SORTIE est une catégorie (spam/pas spam, chat/chien…). Baseline : régression logistique.',
+rules:[{val:'Baseline',label:'Régression Logistique',type:'good'},{val:'Performance',label:'Random Forest / XGBoost',type:'good'},{val:'Images',label:'CNN (ResNet...)',type:'good'},{val:'Texte',label:'Transformers (BERT...)',type:'good'},{val:'Déséquilibre',label:'F1/AUC plutôt qu\'Accuracy',type:'warn'}],
+tip:'Régression logistique d\'abord — rapide, interprétable, souvent compétitive.',
+d2t:'Problème à sortie catégorielle. Baseline = LogReg. Performance = XGBoost. Images = CNN. Texte = BERT.',
+t2d:['Sortie catégorielle → LogReg baseline, XGBoost perf, CNN images, BERT texte','Sortie continue','Groupes sans labels','Réduction de dimensionnalité'],
+scenarios:[],
+tf:[
+{stmt:'Pour classifier du texte en sentiments, Random Forest est toujours optimal.',answer:false,explain:'Non — en 2024, Transformers (BERT, RoBERTa) ou régression logistique sur TF-IDF battent RF sur le texte.'},
+]},
+{id:'pca',name:'PCA',full:'Principal Component Analysis',family:'choose',
+image:'📉 "Je compresse les données en gardant le max d\'information." Réduit le nombre de features. Non-supervisé.',
+rules:[{val:'Variance cumulée > 95%',label:'Choisir n_components',type:'good'},{val:'Avant clustering',label:'Réduire le bruit',type:'good'},{val:'Visualisation 2D/3D',label:'Projeter les données',type:'good'}],
+tip:'PCA CRÉE de nouvelles composantes (combinaisons linéaires), ne sélectionne pas les features originales.',
+d2t:'Réduction de dimensionnalité non-supervisée. Crée des composantes qui capturent le maximum de variance.',
+t2d:['Réduction de dimensionnalité — comprime les features en gardant max de variance','Algorithme de clustering','Réseau de neurones pour images','Méthode de régularisation'],
+scenarios:[],
+tf:[
+{stmt:'PCA sélectionne les k features les plus importantes parmi les features originales.',answer:false,explain:'Non ! PCA CRÉE de nouvelles features = combinaisons linéaires des features originales. Elle transforme, pas sélectionne.'},
+]},
+{id:'regularization',name:'Régularisation',full:'L1 Lasso / L2 Ridge',family:'choose',
+image:'⛓️ "Je pénalise les coefficients trop grands." Évite l\'overfitting en forçant le modèle à rester simple.',
+rules:[{val:'L1 (Lasso)',label:'Met certains coeff à 0 → sélection features',type:'good'},{val:'L2 (Ridge)',label:'Réduit tous les coeff',type:'good'},{val:'ElasticNet',label:'Mélange L1 + L2',type:'good'}],
+tip:'Overfitting → ajouter régularisation. L1 si tu veux sélectionner des features automatiquement.',
+d2t:'Technique anti-overfitting : pénalise les grands coefficients. L1 = sélection de features. L2 = réduction uniforme.',
+t2d:['Pénalisation des grands coefficients — L1 sélectionne, L2 réduit tous','Augmentation des données','Normalisation des données','Optimisation des hyperparamètres'],
+scenarios:[],
+tf:[
+{stmt:'L1 (Lasso) peut réduire certains coefficients exactement à 0.',answer:true,explain:'Exactement ! C\'est la propriété clé de L1. Elle force la parcimonie — certaines features sont complètement exclues.'},
+]},
+];
+
+const FI={eval:{label:'📊 Évaluation',cls:'pill-eval'},model:{label:'🤖 Modèles',cls:'pill-model'},classif:{label:'🏷️ Classification',cls:'pill-classif'},summary:{label:'📋 Summary',cls:'pill-summary'},libs:{label:'📦 Libs',cls:'pill-libs'},choose:{label:'🧭 Choisir',cls:'pill-choose'}};
+let currentFilter='all',currentSearch='',quizMode='all',quizFamilyFilter=null,quizQueue=[],qIdx=0,correct=0,wrong=0,streak=0,bestStreak=0,answered=false;
+
+function buildCard(t){
+const fi=FI[t.family];
+const rules=t.rules.map(r=>`<div class="rule"><span class="rule-val">${r.val}</span><span class="rule-badge ${r.type==='good'?'good-badge':r.type==='warn'?'warn-badge':'bad-badge'}">${r.label}</span></div>`).join('');
+const tip=t.tip?`<div class="card-tip">💡 ${t.tip}</div>`:'';
+return`<div class="card" data-family="${t.family}"><div class="card-top"><div><div class="card-name">${t.name}</div><div class="card-full">${t.full}</div></div><span class="family-pill ${fi.cls}">${fi.label}</span></div><div class="card-image"><div class="img-label">Image mentale</div>${t.image}</div><div class="card-rules">${rules}</div>${tip}</div>`;
+}
+
+function renderCards(){const q=currentSearch.toLowerCase();const v=TERMS.filter(t=>(currentFilter==='all'||t.family===currentFilter)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||t.id.includes(q)||(t.d2t||'').toLowerCase().includes(q)));document.getElementById('cards-grid').innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';}
+function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderCards();}
+function filterCards(){currentSearch=document.getElementById('search').value;renderCards();}
+
+function setMode(m){quizMode=m;quizFamilyFilter=(m==='eval'||m==='model')?m:null;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));buildQ();qIdx=0;correct=0;wrong=0;streak=0;answered=false;document.getElementById('quiz-end').classList.remove('show');document.getElementById('quiz-card').style.display='';renderQ();}
+
+function buildQ(){let pool=quizFamilyFilter?TERMS.filter(t=>t.family===quizFamilyFilter):[...TERMS];let qs=[];pool.forEach(t=>{if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});(t.scenarios||[]).forEach(s=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,s});});(t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf});});});for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}quizQueue=qs.slice(0,30);}
+
+function buildQ2(){let pool=quizFamilyFilter?TERMS.filter(t=>t.family===quizFamilyFilter):[...TERMS];let qs=[];pool.forEach(t=>{if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});(t.scenarios||[]).forEach(sc=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,sc:sc});});(t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf:tf});});});for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}quizQueue=qs.slice(0,30);}
+
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function renderQ(){
+if(qIdx>=quizQueue.length){showEnd();return;}
+answered=false;
+const q=quizQueue[qIdx];const t=q.term;const fi=FI[t.family];
+document.getElementById('qfamily').innerHTML=`<span class="family-pill ${fi.cls}">${fi.label} · ${t.name}</span>`;
+document.getElementById('qfeedback').className='quiz-feedback';
+document.getElementById('btn-next').className='btn-next';
+document.getElementById('qprogress').textContent=`Question ${qIdx+1} / ${quizQueue.length}`;
+document.getElementById('qscore-live').innerHTML=`<span class="sc">✓ ${correct}</span> · <span class="sw">✗ ${wrong}</span> · 🔥 ${streak}`;
+const ch=document.getElementById('qchoices');ch.innerHTML='';
+
+if(q.type==='t2d'){
+document.getElementById('qtype-label').textContent='📖 Terme → Définition';
+document.getElementById('qquestion').textContent=`Que signifie "${t.name}" (${t.full}) ?`;
+const ca=t.t2d[0];
+shuf([...t.t2d]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,t.image+(t.tip?'\n💡 '+t.tip:''));ch.appendChild(btn);});
+}else if(q.type==='d2t'){
+document.getElementById('qtype-label').textContent='🔍 Définition → Terme';
+document.getElementById('qquestion').textContent=t.d2t;
+const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);
+shuf([t.name,...others]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===t.name,t.name,t.image);ch.appendChild(btn);});
+}else if(q.type==='sc'){
+document.getElementById('qtype-label').textContent='🎬 Scénario réel';
+document.getElementById('qquestion').textContent=q.sc.q;
+shuf([q.sc.choice,...q.sc.wrongs]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===q.sc.choice,q.sc.choice,q.sc.answer);ch.appendChild(btn);});
+}else if(q.type==='tf'){
+document.getElementById('qtype-label').textContent='✅ Vrai ou Faux ?';
+document.getElementById('qquestion').textContent='"'+q.tf.stmt+'"';
+const ex=q.tf.explain.replace(/'/g,"\\'");
+ch.innerHTML=`<div class="tf-choices"><button class="tf-btn vrai" onclick="handleTF(this,true,${q.tf.answer},'${ex}')">✅ VRAI</button><button class="tf-btn faux" onclick="handleTF(this,false,${q.tf.answer},'${ex}')">❌ FAUX</button></div>`;
+}
+}
+
+function handleC(btn,isOk,ca,expl){if(answered)return;answered=true;btn.parentElement.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;if(b.textContent===ca)b.classList.add('correct');});if(!isOk)btn.classList.add('wrong');showFB(isOk,expl);updScore(isOk);}
+function handleTF(btn,chosen,correct_ans,expl){if(answered)return;answered=true;const ok=chosen===correct_ans;btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.disabled=true;const isV=b.classList.contains('vrai');if((isV&&correct_ans)||(!isV&&!correct_ans))b.classList.add('correct');});if(!ok)btn.classList.add('wrong');showFB(ok,expl);updScore(ok);}
+function showFB(ok,expl){const fb=document.getElementById('qfeedback');fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.innerHTML=(ok?'✅ <strong>Correct !</strong> ':'❌ <strong>Pas tout à fait.</strong> ')+expl;document.getElementById('btn-next').className='btn-next show';}
+function updScore(ok){if(ok){correct++;streak++;if(streak>bestStreak)bestStreak=streak;}else{wrong++;streak=0;}document.getElementById('total-correct').textContent=correct;document.getElementById('total-wrong').textContent=wrong;const tot=correct+wrong;document.getElementById('total-pct').textContent=tot?Math.round(correct/tot*100)+'%':'—';document.getElementById('streak-display').textContent='🔥 '+streak;document.getElementById('best-streak').textContent=bestStreak;}
+function nextQuestion(){qIdx++;renderQ();}
+function showEnd(){document.getElementById('quiz-card').style.display='none';const end=document.getElementById('quiz-end');end.classList.add('show');const pct=Math.round(correct/(correct+wrong||1)*100);const emoji=pct>=85?'🏆':pct>=65?'🎉':pct>=45?'💪':'😅';const title=pct>=85?'Excellent travail !':pct>=65?'Bien joué !':pct>=45?'Continue comme ça !':'On va progresser !';document.getElementById('end-emoji').textContent=emoji;document.getElementById('end-title').textContent=title;document.getElementById('end-score').innerHTML=`<span style="color:${pct>=65?'var(--good)':'var(--bad)'}">${pct}%</span>`;document.getElementById('end-streak').textContent=`${correct} bonnes réponses · Meilleur streak 🔥${bestStreak}`;}
+function restartQuiz(){buildQ2();qIdx=0;correct=0;wrong=0;streak=0;answered=false;document.getElementById('quiz-end').classList.remove('show');document.getElementById('quiz-card').style.display='';renderQ();}
+function showTab(tab){document.getElementById('tab-glossaire').style.display=tab==='glossaire'?'':'none';document.getElementById('tab-quiz').style.display=tab==='quiz'?'':'none';document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='glossaire')||(i===1&&tab==='quiz')));if(tab==='quiz'&&quizQueue.length===0){buildQ2();renderQ();}}
+
+
+// ═══════════════════════════════════════
+// FIREBASE SYNC (Compat SDK — pas d'ESM)
+// ═══════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCSJyr0WHkmQUZz32n1OCZhuuh3k2IrSYI",
+  authDomain: "ml-course-a11e7.firebaseapp.com",
+  projectId: "ml-course-a11e7",
+  storageBucket: "ml-course-a11e7.firebasestorage.app",
+  messagingSenderId: "1050580397485",
+  appId: "1:1050580397485:web:04f892ec7afc7c4ed58524"
+};
+
+let db = null;
+let docRef = null;
+
+function getUserId() {
+  let uid = localStorage.getItem('ml_memos_uid');
+  if (!uid) { uid = 'user_' + Math.random().toString(36).substr(2,9); localStorage.setItem('ml_memos_uid', uid); }
+  return uid;
+}
+
+function initFirebase() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    const uid = getUserId();
+    docRef = db.collection('progress').doc(uid);
+    loadProgress();
+  } catch(e) { console.warn('Firebase init failed:', e); showSync('⚠️ Mode hors ligne'); }
+}
+
+async function loadProgress() {
+  if (!docRef) return;
+  try {
+    const snap = await docRef.get();
+    if (snap.exists) {
+      const d = snap.data();
+      correct    = d.correct    || 0;
+      wrong      = d.wrong      || 0;
+      bestStreak = d.bestStreak || 0;
+      document.getElementById('total-correct').textContent = correct;
+      document.getElementById('total-wrong').textContent   = wrong;
+      const tot = correct + wrong;
+      document.getElementById('total-pct').textContent = tot ? Math.round(correct/tot*100)+'%' : '—';
+      document.getElementById('best-streak').textContent = bestStreak;
+      showSync('☁️ Progression chargée');
+    } else {
+      showSync('🆕 Nouveau profil créé');
+    }
+  } catch(e) { showSync('⚠️ Hors ligne'); }
+}
+
+let _saveTimer = null;
+function saveProgress() {
+  if (!docRef) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try {
+      await docRef.set({ correct, wrong, bestStreak, updatedAt: new Date().toISOString() });
+      showSync('☁️ Sauvegardé');
+    } catch(e) { showSync('⚠️ Erreur sync'); }
+  }, 800);
+}
+
+function showSync(msg) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity = '0', 3000);
+}
+
+// Patch updScore pour déclencher la sauvegarde
+const _updScore = updScore;
+updScore = function(ok) { _updScore(ok); saveProgress(); };
+
+renderCards();
+</script>
+
+<!-- Firebase Compat SDK (pas d'ESM, compatible avec les onclick inline) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>initFirebase();</script>
+</body>
+</html>
