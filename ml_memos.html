@@ -82,13 +82,16 @@
   .warn-badge{background:#fef3c7;color:#92400e;}
   .bad-badge{background:#fee2e2;color:#991b1b;}
   .card-tip{margin-top:.8rem;padding:.6rem .8rem;border-radius:8px;font-size:.8rem;background:#f0fdf4;color:#065f46;border-left:3px solid #10b981;}
+  /* QUIZ */
   .quiz-mode-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;}
   .mode-btn{padding:8px 16px;border-radius:50px;border:2px solid var(--border);background:white;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted);transition:all .2s;}
   .mode-btn.active{border-color:#6366f1;color:#6366f1;background:var(--eval-light);}
-  .mode-btn[data-mode="eval"]{border-color:var(--eval);color:var(--eval);}
-  .mode-btn[data-mode="model"]{border-color:var(--model);color:var(--model);}
-  .mode-btn[data-mode="eval"].active{background:var(--eval-light);}
-  .mode-btn[data-mode="model"].active{background:var(--model-light);}
+  .mode-btn[data-mode="speed"]{border-color:#f59e0b;color:#92400e;}
+  .mode-btn[data-mode="speed"].active{background:#fef3c7;}
+  .mode-btn[data-mode="boss"]{border-color:#ef4444;color:#991b1b;}
+  .mode-btn[data-mode="boss"].active{background:#fee2e2;}
+  .speed-bar-wrap{height:6px;border-radius:3px;background:var(--border);margin-bottom:1rem;overflow:hidden;}
+  .speed-bar{height:100%;border-radius:3px;transition:width 1s linear,background .3s;}
   .quiz-card{background:white;border-radius:20px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,.08);border:2px solid var(--border);max-width:700px;margin:0 auto;}
   .quiz-family-badge{margin-bottom:.8rem;}
   .quiz-type-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:.6rem;}
@@ -124,25 +127,47 @@
   .end-title{font-size:1.6rem;font-weight:900;margin-bottom:.5rem;}
   .end-score{font-size:3rem;font-weight:900;margin:1rem 0;}
   .btn-restart{padding:.9rem 2.5rem;border-radius:50px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-size:1rem;font-weight:700;cursor:pointer;margin-top:1rem;box-shadow:0 4px 12px rgba(99,102,241,.4);}
-  @media(max-width:600px){header{padding:1rem;}main{padding:1rem;}nav button{padding:.8rem 1rem;font-size:.78rem;}.cards-grid{grid-template-columns:1fr;}.score-bar{padding:.5rem 1rem;gap:1rem;}}
+  /* ANKI */
+  .anki-stats{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
+  .anki-stat{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .anki-card{background:white;border-radius:20px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,.08);border:2px solid var(--border);max-width:600px;margin:0 auto;cursor:pointer;transition:transform .2s;user-select:none;}
+  .anki-card:hover{transform:translateY(-2px);}
+  .anki-progress-dots{margin-bottom:.6rem;display:flex;align-items:center;gap:4px;}
+  .anki-counter{font-size:.75rem;color:var(--muted);text-align:right;margin-bottom:.5rem;}
+  .anki-term{font-size:2rem;font-weight:900;margin:.5rem 0 .2rem;line-height:1.2;}
+  .anki-full{font-size:.9rem;color:var(--muted);margin-bottom:1rem;}
+  .anki-hint{color:var(--muted);font-size:.85rem;font-style:italic;margin-top:1.5rem;text-align:center;}
+  .anki-back{animation:fadeIn .3s;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .anki-actions{display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;}
+  .anki-btn{flex:1;padding:1rem 1.5rem;border-radius:14px;border:none;font-size:1rem;font-weight:800;cursor:pointer;transition:all .15s;min-width:140px;}
+  .anki-no{background:#fee2e2;color:#991b1b;}
+  .anki-no:hover{background:#fecaca;transform:scale(1.03);}
+  .anki-yes{background:#d1fae5;color:#065f46;}
+  .anki-yes:hover{background:#a7f3d0;transform:scale(1.03);}
+  @media(max-width:600px){header{padding:1rem;}main{padding:1rem;}nav button{padding:.8rem 1rem;font-size:.78rem;}.cards-grid{grid-template-columns:1fr;}.score-bar{padding:.5rem 1rem;gap:1rem;}.anki-term{font-size:1.5rem;}.anki-actions{flex-direction:column;}}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>🧠 ML Mémos</h1><p>Glossaire interactif + Quiz · Interview-ready</p></div>
+  <div><h1>🧠 ML Mémos</h1><p>Glossaire · Quiz · Anki · Interview-ready</p></div>
   <div class="streak-badge"><div class="streak-num" id="streak-display">🔥 0</div><div class="streak-label">Streak</div></div>
 </header>
 <div class="score-bar">
   <div class="score-item"><div class="score-dot" style="background:var(--good)"></div>Correct : <span class="score-num sc" id="total-correct">0</span></div>
   <div class="score-item"><div class="score-dot" style="background:var(--bad)"></div>Erreurs : <span class="score-num sw" id="total-wrong">0</span></div>
   <div class="score-item"><div class="score-dot" style="background:#6366f1"></div>Score : <span class="score-num" id="total-pct" style="color:#6366f1">—</span></div>
-  <div class="score-item" style="margin-left:auto;font-weight:400;color:var(--muted)">Meilleur streak : <strong id="best-streak" style="color:var(--text)">0</strong></div>
+  <div class="score-item" style="margin-left:auto;font-weight:400;color:var(--muted)">Best streak : <strong id="best-streak" style="color:var(--text)">0</strong></div>
   <div id="sync-status" style="font-size:.75rem;color:var(--muted);transition:opacity 1s;opacity:0;margin-left:1rem;">☁️</div>
 </div>
 <nav>
-  <button class="active" onclick="showTab('glossaire')">📚 Glossaire</button>
-  <button onclick="showTab('quiz')">🎯 Quiz</button>
+  <button class="active" data-tab="glossaire" onclick="showTab('glossaire')">📚 Glossaire</button>
+  <button data-tab="quiz" onclick="showTab('quiz')">🎯 Quiz</button>
+  <button data-tab="anki" onclick="showTab('anki')">🃏 Anki</button>
+  <button data-tab="historique" onclick="showTab('historique')">📈 Historique</button>
 </nav>
+
+<!-- TAB GLOSSAIRE -->
 <div id="tab-glossaire">
 <main>
   <div class="section-title">📚 Glossaire ML</div>
@@ -163,19 +188,22 @@
   <div class="cards-grid" id="cards-grid"></div>
 </main>
 </div>
+
+<!-- TAB QUIZ -->
 <div id="tab-quiz" style="display:none">
 <main>
   <div class="section-title">🎯 Quiz interactif</div>
-  <div class="section-desc">4 types de questions · Streak · Score · Explication après chaque réponse</div>
+  <div class="section-desc">4 types · Speed Round ⚡ · Boss Battle 💀 · Streak · Explication après chaque réponse</div>
   <div class="quiz-mode-bar">
     <button class="mode-btn active" data-mode="all" onclick="setMode('all')">🎲 Mixte</button>
     <button class="mode-btn" data-mode="scenario" onclick="setMode('scenario')">🎬 Scénario</button>
     <button class="mode-btn" data-mode="tf" onclick="setMode('tf')">✅ Vrai/Faux</button>
     <button class="mode-btn" data-mode="term2def" onclick="setMode('term2def')">📖 Terme→Déf</button>
     <button class="mode-btn" data-mode="def2term" onclick="setMode('def2term')">🔍 Déf→Terme</button>
-    <button class="mode-btn" data-mode="eval" onclick="setMode('eval')">📊 Éval seul</button>
-    <button class="mode-btn" data-mode="model" onclick="setMode('model')">🤖 Modèles seuls</button>
+    <button class="mode-btn" data-mode="speed" onclick="setMode('speed')">⚡ Speed Round</button>
+    <button class="mode-btn" data-mode="boss" onclick="setMode('boss')">💀 Boss Battle</button>
   </div>
+  <div id="speed-bar-wrap" class="speed-bar-wrap" style="display:none;max-width:700px;margin:0 auto 1rem;"><div id="speed-bar" class="speed-bar" style="width:100%;background:var(--good)"></div></div>
   <div id="quiz-area">
     <div class="quiz-card" id="quiz-card">
       <div class="quiz-family-badge" id="qfamily"></div>
@@ -201,6 +229,26 @@
   </div>
 </main>
 </div>
+
+<!-- TAB ANKI -->
+<div id="tab-anki" style="display:none">
+<main>
+  <div class="section-title">🃏 Mode Anki</div>
+  <div class="section-desc">Répétition espacée · 5 bonnes réponses = maîtrisé ⭐ · Cartes maîtrisées reviennent moins souvent</div>
+  <div class="anki-stats" id="anki-stats"></div>
+  <div id="anki-card-area"></div>
+</main>
+</div>
+
+<!-- TAB HISTORIQUE -->
+<div id="tab-historique" style="display:none">
+<main>
+  <div class="section-title">📈 Historique & Progression</div>
+  <div class="section-desc">Toutes les cartes · Progression par terme · Cartes maîtrisées ⭐</div>
+  <div id="histo-content"></div>
+</main>
+</div>
+
 <script>
 const TERMS=[
 {id:'r2',name:'R²',full:'Coefficient de Détermination',family:'eval',
@@ -635,151 +683,428 @@ tf:[
 ];
 
 const FI={eval:{label:'📊 Évaluation',cls:'pill-eval'},model:{label:'🤖 Modèles',cls:'pill-model'},classif:{label:'🏷️ Classification',cls:'pill-classif'},summary:{label:'📋 Summary',cls:'pill-summary'},libs:{label:'📦 Libs',cls:'pill-libs'},choose:{label:'🧭 Choisir',cls:'pill-choose'}};
-let currentFilter='all',currentSearch='',quizMode='all',quizFamilyFilter=null,quizQueue=[],qIdx=0,correct=0,wrong=0,streak=0,bestStreak=0,answered=false;
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let currentFilter='all',currentSearch='';
+let quizMode='all',quizFamilyFilter=null,quizQueue=[],qIdx=0;
+let correct=0,wrong=0,streak=0,bestStreak=0,answered=false;
+let cardStats={};      // {termId: {correct,wrong,lastSeen,nextDue}}
+let ankiQueue=[],ankiIdx=0,ankiFlipped=false,ankiCurrentTerm=null;
+let speedTimer=null,speedTimeLeft=15;
+const SPEED_TIME=15;
 
+// ─────────────────────────────────────────
+// GLOSSAIRE
+// ─────────────────────────────────────────
 function buildCard(t){
-const fi=FI[t.family];
-const rules=t.rules.map(r=>`<div class="rule"><span class="rule-val">${r.val}</span><span class="rule-badge ${r.type==='good'?'good-badge':r.type==='warn'?'warn-badge':'bad-badge'}">${r.label}</span></div>`).join('');
-const tip=t.tip?`<div class="card-tip">💡 ${t.tip}</div>`:'';
-return`<div class="card" data-family="${t.family}"><div class="card-top"><div><div class="card-name">${t.name}</div><div class="card-full">${t.full}</div></div><span class="family-pill ${fi.cls}">${fi.label}</span></div><div class="card-image"><div class="img-label">Image mentale</div>${t.image}</div><div class="card-rules">${rules}</div>${tip}</div>`;
+  const fi=FI[t.family];
+  const rules=t.rules.map(r=>`<div class="rule"><span class="rule-val">${r.val}</span><span class="rule-badge ${r.type==='good'?'good-badge':r.type==='warn'?'warn-badge':'bad-badge'}">${r.label}</span></div>`).join('');
+  const tip=t.tip?`<div class="card-tip">💡 ${t.tip}</div>`:'';
+  const s=cardStats[t.id]||{correct:0};
+  const mastered=(s.correct||0)>=5;
+  const badge=mastered?` <span class="good-badge" style="font-size:.65rem;padding:1px 6px;vertical-align:middle">⭐ Maîtrisé</span>`:'';
+  return`<div class="card" data-family="${t.family}"><div class="card-top"><div><div class="card-name">${t.name}${badge}</div><div class="card-full">${t.full}</div></div><span class="family-pill ${fi.cls}">${fi.label}</span></div><div class="card-image"><div class="img-label">Image mentale</div>${t.image}</div><div class="card-rules">${rules}</div>${tip}</div>`;
 }
-
-function renderCards(){const q=currentSearch.toLowerCase();const v=TERMS.filter(t=>(currentFilter==='all'||t.family===currentFilter)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||t.id.includes(q)||(t.d2t||'').toLowerCase().includes(q)));document.getElementById('cards-grid').innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';}
+function renderCards(){
+  const q=currentSearch.toLowerCase();
+  const v=TERMS.filter(t=>(currentFilter==='all'||t.family===currentFilter)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||t.id.includes(q)||(t.d2t||'').toLowerCase().includes(q)));
+  document.getElementById('cards-grid').innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';
+}
 function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderCards();}
 function filterCards(){currentSearch=document.getElementById('search').value;renderCards();}
 
-function setMode(m){quizMode=m;quizFamilyFilter=(m==='eval'||m==='model')?m:null;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));buildQ();qIdx=0;correct=0;wrong=0;streak=0;answered=false;document.getElementById('quiz-end').classList.remove('show');document.getElementById('quiz-card').style.display='';renderQ();}
+// ─────────────────────────────────────────
+// QUIZ
+// ─────────────────────────────────────────
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 
-function buildQ(){let pool=quizFamilyFilter?TERMS.filter(t=>t.family===quizFamilyFilter):[...TERMS];let qs=[];pool.forEach(t=>{if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});(t.scenarios||[]).forEach(s=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,s});});(t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf});});});for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}quizQueue=qs.slice(0,30);}
+function setMode(m){
+  quizMode=m;
+  clearInterval(speedTimer);
+  const sbw=document.getElementById('speed-bar-wrap');
+  if(sbw)sbw.style.display='none';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  buildQ();
+  qIdx=0;correct=0;wrong=0;streak=0;answered=false;
+  document.getElementById('quiz-end').classList.remove('show');
+  document.getElementById('quiz-card').style.display='';
+  renderQ();
+}
 
-function buildQ2(){let pool=quizFamilyFilter?TERMS.filter(t=>t.family===quizFamilyFilter):[...TERMS];let qs=[];pool.forEach(t=>{if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});(t.scenarios||[]).forEach(sc=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,sc:sc});});(t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf:tf});});});for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}quizQueue=qs.slice(0,30);}
-
-function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildQ(){
+  let pool=TERMS;
+  if(quizMode==='speed'){
+    let qs=[];
+    pool.forEach(t=>{if(t.t2d)qs.push({type:'t2d',term:t});});
+    quizQueue=shuf(qs).slice(0,15);
+    return;
+  }
+  if(quizMode==='boss'){
+    let qs=[];
+    pool.forEach(t=>{
+      (t.scenarios||[]).forEach(sc=>qs.push({type:'sc',term:t,sc:sc}));
+      (t.tf||[]).forEach(tf=>qs.push({type:'tf',term:t,tf:tf}));
+    });
+    quizQueue=shuf(qs).slice(0,20);
+    return;
+  }
+  let qs=[];
+  pool.forEach(t=>{
+    if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});
+    if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});
+    (t.scenarios||[]).forEach(sc=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,sc:sc});});
+    (t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf:tf});});
+  });
+  quizQueue=shuf(qs).slice(0,30);
+}
 
 function renderQ(){
-if(qIdx>=quizQueue.length){showEnd();return;}
-answered=false;
-const q=quizQueue[qIdx];const t=q.term;const fi=FI[t.family];
-document.getElementById('qfamily').innerHTML=`<span class="family-pill ${fi.cls}">${fi.label} · ${t.name}</span>`;
-document.getElementById('qfeedback').className='quiz-feedback';
-document.getElementById('btn-next').className='btn-next';
-document.getElementById('qprogress').textContent=`Question ${qIdx+1} / ${quizQueue.length}`;
-document.getElementById('qscore-live').innerHTML=`<span class="sc">✓ ${correct}</span> · <span class="sw">✗ ${wrong}</span> · 🔥 ${streak}`;
-const ch=document.getElementById('qchoices');ch.innerHTML='';
+  clearInterval(speedTimer);
+  if(!quizQueue.length){buildQ();}
+  if(qIdx>=quizQueue.length){showEnd();return;}
+  answered=false;
+  const q=quizQueue[qIdx];const t=q.term;const fi=FI[t.family];
+  document.getElementById('qfamily').innerHTML=`<span class="family-pill ${fi.cls}">${fi.label} · ${t.name}</span>`;
+  document.getElementById('qfeedback').className='quiz-feedback';
+  document.getElementById('btn-next').className='btn-next';
+  document.getElementById('qprogress').textContent=`Question ${qIdx+1} / ${quizQueue.length}`;
+  document.getElementById('qscore-live').innerHTML=`<span class="sc">✓ ${correct}</span> · <span class="sw">✗ ${wrong}</span> · 🔥 ${streak}`;
+  const ch=document.getElementById('qchoices');ch.innerHTML='';
 
-if(q.type==='t2d'){
-document.getElementById('qtype-label').textContent='📖 Terme → Définition';
-document.getElementById('qquestion').textContent=`Que signifie "${t.name}" (${t.full}) ?`;
-const ca=t.t2d[0];
-shuf([...t.t2d]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,t.image+(t.tip?'\n💡 '+t.tip:''));ch.appendChild(btn);});
-}else if(q.type==='d2t'){
-document.getElementById('qtype-label').textContent='🔍 Définition → Terme';
-document.getElementById('qquestion').textContent=t.d2t;
-const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);
-shuf([t.name,...others]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===t.name,t.name,t.image);ch.appendChild(btn);});
-}else if(q.type==='sc'){
-document.getElementById('qtype-label').textContent='🎬 Scénario réel';
-document.getElementById('qquestion').textContent=q.sc.q;
-shuf([q.sc.choice,...q.sc.wrongs]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===q.sc.choice,q.sc.choice,q.sc.answer);ch.appendChild(btn);});
-}else if(q.type==='tf'){
-document.getElementById('qtype-label').textContent='✅ Vrai ou Faux ?';
-document.getElementById('qquestion').textContent='"'+q.tf.stmt+'"';
-const ex=q.tf.explain.replace(/'/g,"\\'");
-ch.innerHTML=`<div class="tf-choices"><button class="tf-btn vrai" onclick="handleTF(this,true,${q.tf.answer},'${ex}')">✅ VRAI</button><button class="tf-btn faux" onclick="handleTF(this,false,${q.tf.answer},'${ex}')">❌ FAUX</button></div>`;
-}
+  // Speed bar
+  const sbw=document.getElementById('speed-bar-wrap');
+  if(quizMode==='speed'&&sbw){
+    sbw.style.display='block';
+    speedTimeLeft=SPEED_TIME;
+    const bar=document.getElementById('speed-bar');
+    bar.style.width='100%';bar.style.background='var(--good)';
+    speedTimer=setInterval(()=>{
+      speedTimeLeft--;
+      const pct=speedTimeLeft/SPEED_TIME*100;
+      bar.style.width=pct+'%';
+      bar.style.background=pct>50?'var(--good)':pct>25?'var(--warn)':'var(--bad)';
+      if(speedTimeLeft<=0){clearInterval(speedTimer);timeOut();}
+    },1000);
+  } else if(sbw) sbw.style.display='none';
+
+  if(q.type==='t2d'){
+    document.getElementById('qtype-label').textContent='📖 Terme → Définition';
+    document.getElementById('qquestion').textContent=`Que signifie "${t.name}" (${t.full}) ?`;
+    const ca=t.t2d[0];
+    shuf([...t.t2d]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,t.image+(t.tip?'\n\n💡 '+t.tip:''));ch.appendChild(btn);});
+  } else if(q.type==='d2t'){
+    document.getElementById('qtype-label').textContent='🔍 Définition → Terme';
+    document.getElementById('qquestion').textContent=t.d2t;
+    const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);
+    shuf([t.name,...others]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===t.name,t.name,t.image);ch.appendChild(btn);});
+  } else if(q.type==='sc'){
+    document.getElementById('qtype-label').textContent='🎬 Scénario réel';
+    document.getElementById('qquestion').textContent=q.sc.q;
+    const ca=q.sc.choice;const expl=q.sc.answer;
+    shuf([ca,...q.sc.wrongs]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,expl);ch.appendChild(btn);});
+  } else if(q.type==='tf'){
+    document.getElementById('qtype-label').textContent='✅ Vrai ou Faux ?';
+    document.getElementById('qquestion').textContent='"'+q.tf.stmt+'"';
+    const ans=q.tf.answer;const expl=q.tf.explain||'';
+    ch.innerHTML=`<div class="tf-choices"><button class="tf-btn vrai" onclick="handleTF(this,true)">✅ VRAI</button><button class="tf-btn faux" onclick="handleTF(this,false)">❌ FAUX</button></div>`;
+    ch._tfAnswer=ans;ch._tfExpl=expl;
+  }
 }
 
-function handleC(btn,isOk,ca,expl){if(answered)return;answered=true;btn.parentElement.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;if(b.textContent===ca)b.classList.add('correct');});if(!isOk)btn.classList.add('wrong');showFB(isOk,expl);updScore(isOk);}
-function handleTF(btn,chosen,correct_ans,expl){if(answered)return;answered=true;const ok=chosen===correct_ans;btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.disabled=true;const isV=b.classList.contains('vrai');if((isV&&correct_ans)||(!isV&&!correct_ans))b.classList.add('correct');});if(!ok)btn.classList.add('wrong');showFB(ok,expl);updScore(ok);}
-function showFB(ok,expl){const fb=document.getElementById('qfeedback');fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.innerHTML=(ok?'✅ <strong>Correct !</strong> ':'❌ <strong>Pas tout à fait.</strong> ')+expl;document.getElementById('btn-next').className='btn-next show';}
-function updScore(ok){if(ok){correct++;streak++;if(streak>bestStreak)bestStreak=streak;}else{wrong++;streak=0;}document.getElementById('total-correct').textContent=correct;document.getElementById('total-wrong').textContent=wrong;const tot=correct+wrong;document.getElementById('total-pct').textContent=tot?Math.round(correct/tot*100)+'%':'—';document.getElementById('streak-display').textContent='🔥 '+streak;document.getElementById('best-streak').textContent=bestStreak;}
+function timeOut(){
+  if(answered)return;answered=true;
+  document.getElementById('qchoices').querySelectorAll('.choice-btn,.tf-btn').forEach(b=>b.disabled=true);
+  showFB(false,'⏱️ Temps écoulé !');updScore(false);
+}
+function handleC(btn,isOk,ca,expl){
+  if(answered)return;clearInterval(speedTimer);answered=true;
+  btn.parentElement.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;if(b.textContent===ca)b.classList.add('correct');});
+  if(!isOk)btn.classList.add('wrong');
+  if(quizMode==='boss'&&!isOk){showBossLost();return;}
+  showFB(isOk,expl);updScore(isOk);
+}
+function handleTF(btn,chosen){
+  if(answered)return;clearInterval(speedTimer);answered=true;
+  const ch=document.getElementById('qchoices');
+  const ans=ch._tfAnswer;const expl=ch._tfExpl||'';
+  const ok=chosen===ans;
+  btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.disabled=true;const isV=b.classList.contains('vrai');if((isV&&ans)||(!isV&&!ans))b.classList.add('correct');});
+  if(!ok)btn.classList.add('wrong');
+  if(quizMode==='boss'&&!ok){showBossLost();return;}
+  showFB(ok,expl);updScore(ok);
+}
+function showFB(ok,expl){
+  const fb=document.getElementById('qfeedback');
+  fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');
+  fb.innerHTML=(ok?'✅ <strong>Correct !</strong> ':'❌ <strong>Pas tout à fait.</strong> ')+expl;
+  document.getElementById('btn-next').className='btn-next show';
+}
+function updScore(ok){
+  if(ok){correct++;streak++;if(streak>bestStreak)bestStreak=streak;}else{wrong++;streak=0;}
+  document.getElementById('total-correct').textContent=correct;
+  document.getElementById('total-wrong').textContent=wrong;
+  const tot=correct+wrong;
+  document.getElementById('total-pct').textContent=tot?Math.round(correct/tot*100)+'%':'—';
+  document.getElementById('streak-display').textContent='🔥 '+streak;
+  document.getElementById('best-streak').textContent=bestStreak;
+  saveProgress();
+}
 function nextQuestion(){qIdx++;renderQ();}
-function showEnd(){document.getElementById('quiz-card').style.display='none';const end=document.getElementById('quiz-end');end.classList.add('show');const pct=Math.round(correct/(correct+wrong||1)*100);const emoji=pct>=85?'🏆':pct>=65?'🎉':pct>=45?'💪':'😅';const title=pct>=85?'Excellent travail !':pct>=65?'Bien joué !':pct>=45?'Continue comme ça !':'On va progresser !';document.getElementById('end-emoji').textContent=emoji;document.getElementById('end-title').textContent=title;document.getElementById('end-score').innerHTML=`<span style="color:${pct>=65?'var(--good)':'var(--bad)'}">${pct}%</span>`;document.getElementById('end-streak').textContent=`${correct} bonnes réponses · Meilleur streak 🔥${bestStreak}`;}
-function restartQuiz(){buildQ2();qIdx=0;correct=0;wrong=0;streak=0;answered=false;document.getElementById('quiz-end').classList.remove('show');document.getElementById('quiz-card').style.display='';renderQ();}
-function showTab(tab){document.getElementById('tab-glossaire').style.display=tab==='glossaire'?'':'none';document.getElementById('tab-quiz').style.display=tab==='quiz'?'':'none';document.querySelectorAll('nav button').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='glossaire')||(i===1&&tab==='quiz')));if(tab==='quiz'&&quizQueue.length===0){buildQ2();renderQ();}}
+function showEnd(){
+  clearInterval(speedTimer);
+  document.getElementById('quiz-card').style.display='none';
+  const end=document.getElementById('quiz-end');end.classList.add('show');
+  const tot=correct+wrong||1;const pct=Math.round(correct/tot*100);
+  const emoji=pct>=85?'🏆':pct>=65?'🎉':pct>=45?'💪':'😅';
+  document.getElementById('end-emoji').textContent=emoji;
+  document.getElementById('end-title').textContent=pct>=85?'Excellent !':pct>=65?'Bien joué !':pct>=45?'Continue !':'On progresse !';
+  document.getElementById('end-score').innerHTML=`<span style="color:${pct>=65?'var(--good)':'var(--bad)'}">${pct}%</span>`;
+  document.getElementById('end-streak').textContent=`${correct} bonnes · Meilleur streak 🔥${bestStreak}`;
+}
+function showBossLost(){
+  clearInterval(speedTimer);
+  document.getElementById('quiz-card').style.display='none';
+  const end=document.getElementById('quiz-end');end.classList.add('show');
+  document.getElementById('end-emoji').textContent='💀';
+  document.getElementById('end-title').textContent='Le Boss t\'a battu !';
+  document.getElementById('end-score').innerHTML=`<span style="color:var(--bad)">${qIdx} / ${quizQueue.length}</span>`;
+  document.getElementById('end-streak').textContent=`Tombé à la question ${qIdx+1}. Réessaie !`;
+}
+function restartQuiz(){
+  buildQ();qIdx=0;correct=0;wrong=0;streak=0;answered=false;
+  document.getElementById('quiz-end').classList.remove('show');
+  document.getElementById('quiz-card').style.display='';
+  renderQ();
+}
 
+// ─────────────────────────────────────────
+// ANKI
+// ─────────────────────────────────────────
+function buildAnkiQueue(){
+  const now=Date.now();
+  let due=[],later=[],mastered=[];
+  TERMS.forEach(t=>{
+    const s=cardStats[t.id]||{correct:0};
+    if((s.correct||0)>=5)mastered.push(t);
+    else if(!s.nextDue||s.nextDue<=now)due.push(t);
+    else later.push(t);
+  });
+  const masteredFew=shuf(mastered).slice(0,Math.max(1,Math.ceil(mastered.length/5)));
+  ankiQueue=shuf([...due,...later,...masteredFew]);
+  ankiIdx=0;
+}
 
-// ═══════════════════════════════════════
-// FIREBASE SYNC (Compat SDK — pas d'ESM)
-// ═══════════════════════════════════════
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCSJyr0WHkmQUZz32n1OCZhuuh3k2IrSYI",
-  authDomain: "ml-course-a11e7.firebaseapp.com",
-  projectId: "ml-course-a11e7",
-  storageBucket: "ml-course-a11e7.firebasestorage.app",
-  messagingSenderId: "1050580397485",
-  appId: "1:1050580397485:web:04f892ec7afc7c4ed58524"
+function showAnkiCard(){
+  const area=document.getElementById('anki-card-area');
+  if(ankiIdx>=ankiQueue.length){
+    area.innerHTML=`<div style="text-align:center;padding:3rem"><div style="font-size:3rem">🎉</div><div style="font-size:1.3rem;font-weight:800;margin:1rem 0">Session terminée !</div><div style="color:var(--muted)">Toutes les cartes vues. Reviens demain !</div><button class="btn-restart" onclick="buildAnkiQueue();showAnkiCard()" style="margin-top:1.5rem">🔄 Recommencer</button></div>`;
+    return;
+  }
+  ankiCurrentTerm=ankiQueue[ankiIdx];ankiFlipped=false;
+  const t=ankiCurrentTerm;const fi=FI[t.family];
+  const s=cardStats[t.id]||{correct:0,wrong:0};
+  const mastered=(s.correct||0)>=5;
+  const pips=[...Array(5)].map((_,i)=>`<span style="width:12px;height:12px;border-radius:50%;display:inline-block;margin:0 2px;background:${i<(s.correct||0)?'var(--good)':'var(--border)'};transition:background .3s"></span>`).join('');
+  area.innerHTML=`
+    <div class="anki-card" id="anki-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <div class="anki-progress-dots">${pips}${mastered?' <span class="good-badge" style="font-size:.65rem;margin-left:8px">⭐ Maîtrisé</span>':''}</div>
+        <div class="anki-counter">${ankiIdx+1} / ${ankiQueue.length}</div>
+      </div>
+      <span class="family-pill ${fi.cls}" style="margin-bottom:1rem;display:inline-flex">${fi.label}</span>
+      <div class="anki-term">${t.name}</div>
+      <div class="anki-full">${t.full}</div>
+      <div class="anki-hint" id="anki-hint">👆 Clique pour révéler la réponse</div>
+      <div id="anki-back" style="display:none">
+        <div class="card-image" style="border-color:${fi.cls.includes('eval')?'var(--eval)':fi.cls.includes('model')?'var(--model)':fi.cls.includes('classif')?'var(--classif)':fi.cls.includes('summary')?'var(--summary)':fi.cls.includes('libs')?'var(--libs)':'var(--choose)'};margin-top:1rem">
+          <div class="img-label">Image mentale</div>${t.image}
+        </div>
+        ${t.tip?`<div class="card-tip">💡 ${t.tip}</div>`:''}
+      </div>
+      <div class="anki-actions" id="anki-actions" style="display:none">
+        <button class="anki-btn anki-no" onclick="ankiAnswer(false)">❌ Je ne savais pas</button>
+        <button class="anki-btn anki-yes" onclick="ankiAnswer(true)">✅ Je savais !</button>
+      </div>
+    </div>`;
+  document.getElementById('anki-card').onclick=function(e){
+    if(ankiFlipped)return;
+    if(e.target.closest('.anki-actions'))return;
+    flipAnki();
+  };
+}
+
+function flipAnki(){
+  if(ankiFlipped)return;
+  ankiFlipped=true;
+  document.getElementById('anki-back').style.display='';
+  document.getElementById('anki-actions').style.display='flex';
+  document.getElementById('anki-hint').style.display='none';
+}
+
+function ankiAnswer(knew){
+  const t=ankiCurrentTerm;
+  if(!cardStats[t.id])cardStats[t.id]={correct:0,wrong:0};
+  const s=cardStats[t.id];
+  if(knew){
+    s.correct=Math.min((s.correct||0)+1,5);
+    const intervals=[86400000,172800000,345600000,604800000,1209600000]; // 1,2,4,7,14j en ms
+    s.nextDue=Date.now()+intervals[Math.min((s.correct||1)-1,4)];
+  } else {
+    s.correct=Math.max((s.correct||0)-1,0);
+    s.wrong=(s.wrong||0)+1;
+    s.nextDue=Date.now()+300000; // 5 min
+  }
+  s.lastSeen=Date.now();
+  cardStats[t.id]=s;
+  saveProgress();
+  updateAnkiStats();
+  // Refresh glossaire badges
+  renderCards();
+  ankiIdx++;
+  showAnkiCard();
+}
+
+function updateAnkiStats(){
+  const total=TERMS.length;
+  const mastered=TERMS.filter(t=>(cardStats[t.id]||{correct:0}).correct>=5).length;
+  const seen=TERMS.filter(t=>cardStats[t.id]&&cardStats[t.id].lastSeen).length;
+  const pct=Math.round(mastered/total*100);
+  document.getElementById('anki-stats').innerHTML=`
+    <div class="anki-stat"><span style="font-size:1.5rem;font-weight:900;color:var(--good)">${mastered}</span><span style="font-size:.75rem;color:var(--muted)">Maîtrisés ⭐</span></div>
+    <div class="anki-stat"><span style="font-size:1.5rem;font-weight:900;color:#6366f1">${seen}</span><span style="font-size:.75rem;color:var(--muted)">Vus</span></div>
+    <div class="anki-stat"><span style="font-size:1.5rem;font-weight:900;color:var(--text)">${total-seen}</span><span style="font-size:.75rem;color:var(--muted)">Nouveaux</span></div>
+    <div class="anki-stat" style="flex:1;min-width:160px">
+      <div style="width:100%;height:10px;background:var(--border);border-radius:5px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#6366f1,#10b981);border-radius:5px;transition:width .5s"></div>
+      </div>
+      <span style="font-size:.75rem;color:var(--muted)">${pct}% maîtrisé</span>
+    </div>`;
+}
+
+// ─────────────────────────────────────────
+// HISTORIQUE
+// ─────────────────────────────────────────
+function renderHistorique(){
+  const rows=TERMS.map(t=>{
+    const s=cardStats[t.id]||{correct:0,wrong:0};
+    const fi=FI[t.family];
+    return{t,s,fi,mastered:(s.correct||0)>=5};
+  }).sort((a,b)=>(b.s.correct||0)-(a.s.correct||0));
+  const masteredCount=rows.filter(r=>r.mastered).length;
+  const seenCount=rows.filter(r=>r.s.lastSeen).length;
+  const total=TERMS.length;
+  document.getElementById('histo-content').innerHTML=`
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <div style="background:white;border-radius:12px;padding:1rem 1.5rem;border:2px solid var(--border);text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:var(--good)">${masteredCount}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Maîtrisés ⭐</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:1rem 1.5rem;border:2px solid var(--border);text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:#6366f1">${seenCount}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Vus</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:1rem 1.5rem;border:2px solid var(--border);text-align:center">
+        <div style="font-size:2rem;font-weight:900">${total-seenCount}</div>
+        <div style="font-size:.8rem;color:var(--muted)">Nouveaux</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:1rem 1.5rem;border:2px solid var(--border);flex:1;min-width:200px">
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Progression globale</div>
+        <div style="height:12px;background:var(--border);border-radius:6px;overflow:hidden">
+          <div style="width:${Math.round(masteredCount/total*100)}%;height:100%;background:linear-gradient(90deg,#6366f1,#10b981);border-radius:6px"></div>
+        </div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:.3rem">${Math.round(masteredCount/total*100)}% maîtrisé</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${rows.map(r=>{
+        const pips=[...Array(5)].map((_,i)=>`<span style="width:9px;height:9px;border-radius:50%;display:inline-block;margin:0 1px;background:${i<(r.s.correct||0)?'var(--good)':'var(--border)'}"></span>`).join('');
+        return`<div style="background:white;border-radius:10px;padding:.8rem 1rem;border:2px solid ${r.mastered?'var(--good)':'var(--border)'};display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <span class="family-pill ${r.fi.cls}" style="min-width:110px">${r.fi.label}</span>
+          <div style="flex:1;min-width:120px"><div style="font-weight:700">${r.t.name}</div><div style="font-size:.75rem;color:var(--muted)">${r.t.full}</div></div>
+          <div>${pips}</div>
+          <div style="font-size:.8rem;min-width:70px;text-align:right">
+            ${r.s.lastSeen?`<span class="sc">✓${r.s.correct||0}</span> <span class="sw">✗${r.s.wrong||0}</span>`:'<span style="color:var(--muted)">Pas vu</span>'}
+          </div>
+          ${r.mastered?'<span class="good-badge">⭐ Maîtrisé</span>':''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ─────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────
+function showTab(tab){
+  ['glossaire','quiz','anki','historique'].forEach(id=>{
+    const el=document.getElementById('tab-'+id);
+    if(el)el.style.display=(id===tab)?'':'none';
+  });
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  if(tab==='quiz'&&quizQueue.length===0){buildQ();renderQ();}
+  if(tab==='anki'){buildAnkiQueue();showAnkiCard();updateAnkiStats();}
+  if(tab==='historique'){renderHistorique();}
+}
+
+// ─────────────────────────────────────────
+// FIREBASE SYNC
+// ─────────────────────────────────────────
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyCSJyr0WHkmQUZz32n1OCZhuuh3k2IrSYI",
+  authDomain:"ml-course-a11e7.firebaseapp.com",
+  projectId:"ml-course-a11e7",
+  storageBucket:"ml-course-a11e7.firebasestorage.app",
+  messagingSenderId:"1050580397485",
+  appId:"1:1050580397485:web:04f892ec7afc7c4ed58524"
 };
-
-let db = null;
-let docRef = null;
-
-function getUserId() {
-  let uid = localStorage.getItem('ml_memos_uid');
-  if (!uid) { uid = 'user_' + Math.random().toString(36).substr(2,9); localStorage.setItem('ml_memos_uid', uid); }
-  return uid;
-}
-
-function initFirebase() {
-  try {
+let db=null,docRef=null;
+function getUserId(){let uid=localStorage.getItem('ml_memos_uid');if(!uid){uid='user_'+Math.random().toString(36).substr(2,9);localStorage.setItem('ml_memos_uid',uid);}return uid;}
+function initFirebase(){
+  try{
     firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.firestore();
-    const uid = getUserId();
-    docRef = db.collection('progress').doc(uid);
+    db=firebase.firestore();
+    docRef=db.collection('progress').doc(getUserId());
     loadProgress();
-  } catch(e) { console.warn('Firebase init failed:', e); showSync('⚠️ Mode hors ligne'); }
+  }catch(e){showSync('⚠️ Mode hors ligne');}
 }
-
-async function loadProgress() {
-  if (!docRef) return;
-  try {
-    const snap = await docRef.get();
-    if (snap.exists) {
-      const d = snap.data();
-      correct    = d.correct    || 0;
-      wrong      = d.wrong      || 0;
-      bestStreak = d.bestStreak || 0;
-      document.getElementById('total-correct').textContent = correct;
-      document.getElementById('total-wrong').textContent   = wrong;
-      const tot = correct + wrong;
-      document.getElementById('total-pct').textContent = tot ? Math.round(correct/tot*100)+'%' : '—';
-      document.getElementById('best-streak').textContent = bestStreak;
+async function loadProgress(){
+  if(!docRef)return;
+  try{
+    const snap=await docRef.get();
+    if(snap.exists){
+      const d=snap.data();
+      correct=d.correct||0;wrong=d.wrong||0;bestStreak=d.bestStreak||0;
+      cardStats=d.cardStats||{};
+      document.getElementById('total-correct').textContent=correct;
+      document.getElementById('total-wrong').textContent=wrong;
+      const tot=correct+wrong;
+      document.getElementById('total-pct').textContent=tot?Math.round(correct/tot*100)+'%':'—';
+      document.getElementById('best-streak').textContent=bestStreak;
       showSync('☁️ Progression chargée');
-    } else {
-      showSync('🆕 Nouveau profil créé');
-    }
-  } catch(e) { showSync('⚠️ Hors ligne'); }
+      renderCards();
+    }else showSync('🆕 Nouveau profil');
+  }catch(e){showSync('⚠️ Hors ligne');}
 }
-
-let _saveTimer = null;
-function saveProgress() {
-  if (!docRef) return;
+let _saveTimer=null;
+function saveProgress(){
+  if(!docRef)return;
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
-    try {
-      await docRef.set({ correct, wrong, bestStreak, updatedAt: new Date().toISOString() });
+  _saveTimer=setTimeout(async()=>{
+    try{
+      await docRef.set({correct,wrong,bestStreak,cardStats,updatedAt:new Date().toISOString()});
       showSync('☁️ Sauvegardé');
-    } catch(e) { showSync('⚠️ Erreur sync'); }
-  }, 800);
+    }catch(e){showSync('⚠️ Erreur sync');}
+  },800);
+}
+function showSync(msg){
+  const el=document.getElementById('sync-status');if(!el)return;
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',3500);
 }
 
-function showSync(msg) {
-  const el = document.getElementById('sync-status');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.opacity = '1';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.style.opacity = '0', 3000);
-}
-
-// Patch updScore pour déclencher la sauvegarde
-const _updScore = updScore;
-updScore = function(ok) { _updScore(ok); saveProgress(); };
-
+// INIT
 renderCards();
 </script>
-
-<!-- Firebase Compat SDK (pas d'ESM, compatible avec les onclick inline) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>initFirebase();</script>
