@@ -357,7 +357,8 @@ async function loadTermsFromSheets(){
 async function init(){
   showSync('⏳ Chargement des données...');
   try{
-    [TERMS]=await Promise.all([loadTermsFromSheets(),loadDictionary()]);
+    TERMS=await loadTermsFromSheets();
+    loadDictionary();
     showSync('✅ '+TERMS.length+' termes chargés');
     renderCards();
     const saved=loadSavedSession();
