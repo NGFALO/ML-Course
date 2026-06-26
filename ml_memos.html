@@ -188,7 +188,7 @@
   /* ── DICTIONARY PANEL ── */
   .dict-btn{position:absolute;top:.9rem;right:.9rem;width:30px;height:30px;border-radius:50%;border:2px solid #6366f1;background:white;color:#6366f1;font-weight:900;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10;transition:background .15s;}
   .dict-btn:hover{background:var(--eval-light);}
-  .dict-panel{position:fixed;top:130px;right:16px;width:285px;max-height:58vh;overflow-y:auto;background:white;border-radius:14px;padding:1rem 1.1rem;box-shadow:0 4px 30px rgba(0,0,0,.18);z-index:9999;border:1px solid var(--border);animation:fadeIn .15s;}
+  .dict-panel{position:fixed;width:285px;max-height:58vh;overflow-y:auto;background:white;border-radius:14px;padding:1rem 1.1rem;box-shadow:0 4px 30px rgba(0,0,0,.18);z-index:9999;border:1px solid var(--border);animation:fadeIn .15s;}
   .dict-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;}
   .dict-panel-title{font-weight:800;font-size:.92rem;}
   .dict-panel-close{border:none;background:none;font-size:1.1rem;cursor:pointer;color:var(--muted);line-height:1;padding:0;}
@@ -546,6 +546,8 @@ async function loadDictionary(){
   }catch(e){console.warn('Dictionary tab not found — skipping:',e);}
 }
 
+function _dictClose(e){hideDictPanel();}
+
 function showDictPanel(containerEl){
   // Toggle
   if(document.getElementById('dict-panel')){hideDictPanel();return;}
@@ -563,10 +565,21 @@ function showDictPanel(containerEl){
     ?found.map(e=>`<div class="dict-entry"><div class="dict-entry-word">${e.word}</div><div class="dict-entry-def">${e.def}</div></div>`).join('')
     :`<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:.8rem 0">Aucun terme reconnu<br>dans cette question.</div>`;
   panel.innerHTML=`<div class="dict-panel-head"><span class="dict-panel-title">📖 Vocabulaire${found.length?' ('+found.length+')':''}</span><button class="dict-panel-close" onclick="hideDictPanel()">✕</button></div>${body}`;
+  // Position near the ? button
+  const btn=containerEl?containerEl.querySelector('.dict-btn'):null;
+  if(btn){
+    const r=btn.getBoundingClientRect();
+    panel.style.top=(r.bottom+8)+'px';
+    panel.style.right=(window.innerWidth-r.right)+'px';
+    panel.style.left='auto';
+  }
   document.body.appendChild(panel);
-  setTimeout(()=>document.addEventListener('click',hideDictPanel,{once:true}),0);
+  // Named listener so we can always remove it cleanly
+  document.removeEventListener('click',_dictClose);
+  setTimeout(()=>document.addEventListener('click',_dictClose),0);
 }
 function hideDictPanel(){
+  document.removeEventListener('click',_dictClose);
   const p=document.getElementById('dict-panel');if(p)p.remove();
 }
 
