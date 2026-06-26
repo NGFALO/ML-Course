@@ -1,0 +1,115 @@
+term_id,val,label,type
+r2,≥ 0.90,Excellent ✅,good
+r2,0.70–0.89,Bon ✓,good
+r2,0.50–0.69,Moyen ⚠,warn
+r2,< 0.50,Mauvais ❌,bad
+mae,→ 0,Parfait,good
+mae,Contexte,Unité = unité des données,warn
+mse,→ 0,Parfait,good
+mse,Unité²,Difficile à interpréter directement,warn
+rmse,→ 0,Parfait,good
+rmse,> MAE,Toujours (si erreurs ≠ 0),warn
+rmse,RMSE >> MAE,Outliers présents ⚠,bad
+cv,k=5 ou 10,Standard,good
+cv,Petit écart-type,Modèle stable ✓,good
+cv,Grand écart-type,Instable ⚠,bad
+overfit,Train >> Test,Overfitting ❌,bad
+overfit,Diff > 0.05,Signe d'alarme,warn
+overfit,Train ≈ Test,Pas d'overfit ✓,good
+underfit,Train ET Test bas,Underfitting ❌,bad
+linreg,Interprétable,Impact de chaque feature visible,good
+linreg,Suppose linéarité,Fail si relation courbe,warn
+linreg,Sensible aux outliers,Erreurs au carré,warn
+logreg,Sortie: 0–1,Probabilité ✓,good
+logreg,Interprétable,Via odds ratio,good
+logreg,Frontière linéaire,Fail si très non-linéaire,warn
+dt,Très interprétable,Chaque règle est visible,good
+dt,Overfit facile,Sans max_depth,bad
+dt,Instable,Change beaucoup avec les données,warn
+rf,n_estimators,100–500 arbres,good
+rf,Peu de tuning,Marche bien out-of-the-box,good
+rf,Lent en prédiction,100 arbres à traverser,warn
+xgb,learning_rate,0.01–0.3,good
+xgb,n_estimators,100–1000,good
+xgb,max_depth,3–8,good
+xgb,Plus de tuning,Que Random Forest,warn
+lgbm,Très rapide,10x+ que XGBoost,good
+lgbm,Grands datasets,> 100k lignes,good
+lgbm,Overfit plus vite,Sur petits datasets,warn
+svm,Kernel RBF,Bon pour non-linéaire,good
+svm,Lent sur big data,O(n²) ou O(n³),bad
+svm,Normaliser d'abord,Très sensible à l'échelle,warn
+knn,k petit,Overfit,warn
+knn,k grand,Underfit,warn
+knn,k=√n,Règle empirique,good
+kmeans,Méthode coude,Pour choisir k optimal,good
+kmeans,Non-supervisé,Pas de labels nécessaires,good
+kmeans,Normaliser,Avant utilisation,warn
+nn,Beaucoup de data,> 10k lignes minimum,warn
+nn,GPU requis,Pour l'entraînement,warn
+nn,Black box,Peu interprétable,warn
+nn,SOTA,"Images, texte, audio",good
+accuracy,> 0.90,Généralement bon,good
+accuracy,Classes déséquilibrées,INUTILE — utiliser F1/AUC,bad
+precision,Haute,Peu de fausses alarmes ✓,good
+precision,Trade-off,Precision vs Recall,warn
+recall,Haut,Peu de cas manqués ✓,good
+recall,Critique si FN coûteux,"Médical, sécurité...",warn
+f1,> 0.85,Très bon ✓,good
+f1,0.65–0.84,Acceptable,warn
+f1,< 0.60,Mauvais ❌,bad
+auc,AUC = 1.0,Parfait ✓,good
+auc,AUC > 0.90,Excellent,good
+auc,AUC = 0.5,= hasard ❌,bad
+auc,AUC < 0.5,Pire que le hasard !,bad
+confmat,Diagonale = bon,VP et VN,good
+confmat,Hors diagonale,FP et FN = erreurs,bad
+coeff,β > 0,Impact positif,good
+coeff,β < 0,Impact négatif,warn
+coeff,β ≈ 0,Peu d'impact (vérifier p-value),warn
+pvalue,p < 0.05,Significatif ✓,good
+pvalue,p < 0.01,Très significatif ✓✓,good
+pvalue,p > 0.05,Non significatif ⚠,warn
+pvalue,p > 0.10,À exclure du modèle,bad
+odds,OR > 1,Facteur de risque — augmente la proba,warn
+odds,OR < 1,Facteur protecteur — diminue la proba,good
+odds,OR = 1,Aucun effet,warn
+tstat,|t| > 2,Significatif (~p<0.05),good
+tstat,|t| > 3,Très significatif,good
+tstat,|t| < 1.5,Pas significatif ❌,bad
+aic,AIC bas,Meilleur modèle ✓,good
+aic,ΔAIC > 10,Modèle clairement meilleur,good
+aic,Relatif,Comparer modèles entre eux,warn
+intercept,Contextuel,Dépend du domaine,warn
+intercept,Souvent absurde,"""Prix si surface=0"" = sans sens",warn
+sklearn,Tabulaire,Parfait,good
+sklearn,Pas deep learning,Utiliser PyTorch/TF,warn
+sklearn,API unifiée,fit / predict / score,good
+pytorch,Recherche,Standard académique,good
+pytorch,GPU natif,CUDA intégré,good
+pytorch,Plus bas niveau,Que Keras,warn
+tensorflow,Keras,Rapide à prototyper,good
+tensorflow,TF Serving,Déploiement production,good
+tensorflow,TFLite,Mobile/Edge,good
+pandas,df.describe(),Stats de base,good
+pandas,df.isnull(),Vérifier les NaN,good
+pandas,df.corr(),Corrélations,good
+numpy,Vectorisé,100x plus rapide que boucles Python,good
+numpy,Base de tout,"sklearn, pandas, PyTorch l'utilisent",good
+huggingface,pipeline(),Modèle en 3 lignes,good
+huggingface,Fine-tuning,>>> entraîner de zéro,good
+ch_regression,Baseline,Régression Linéaire,good
+ch_regression,Performance,Random Forest → XGBoost,good
+ch_regression,Big data,LightGBM,good
+ch_regression,Interprétabilité,LinReg ou DT petit,good
+ch_classification,Baseline,Régression Logistique,good
+ch_classification,Performance,Random Forest / XGBoost,good
+ch_classification,Images,CNN (ResNet...),good
+ch_classification,Texte,Transformers (BERT...),good
+ch_classification,Déséquilibre,F1/AUC plutôt qu'Accuracy,warn
+pca,Variance cumulée > 95%,Choisir n_components,good
+pca,Avant clustering,Réduire le bruit,good
+pca,Visualisation 2D/3D,Projeter les données,good
+regularization,L1 (Lasso),Met certains coeff à 0 → sélection features,good
+regularization,L2 (Ridge),Réduit tous les coeff,good
+regularization,ElasticNet,Mélange L1 + L2,good

@@ -1,0 +1,44 @@
+term_id,statement,answer,explanation
+r2,Un R² de 0.95 signifie que le modèle fait zéro erreur.,FALSE,"R²=1.0 = zéro erreur. R²=0.95 = 95% de variance expliquée, des erreurs existent encore."
+r2,R²=0.93 ± 0.20 est meilleur que R²=0.80 ± 0.01.,FALSE,Non ! R²=0.80 ± 0.01 est plus FIABLE. 0.93 ± 0.20 est très instable. La stabilité prime.
+r2,Un R² de 0.30 indique un mauvais modèle dans la plupart des cas.,TRUE,Oui — 30% de variance expliquée est généralement insuffisant.
+mae,MAE pénalise plus les grandes erreurs que les petites.,FALSE,Non — c'est MSE/RMSE qui pénalisent au carré. MAE traite toutes les erreurs équitablement.
+mae,MAE = 0 signifie des prédictions parfaites.,TRUE,Oui ! MAE=0 → prédit = réel pour chaque observation.
+mse,MSE et MAE donnent toujours le même classement des modèles.,FALSE,Non ! MSE amplifie les grandes erreurs. Un modèle peut avoir bonne MAE mais mauvaise MSE s'il fait quelques grosses erreurs.
+rmse,RMSE est toujours ≥ MAE pour le même modèle.,TRUE,Toujours vrai ! RMSE pénalise les grandes erreurs donc ≥ MAE. Égaux seulement si toutes les erreurs sont identiques.
+cv,"Avec 5-fold CV, le modèle est entraîné 5 fois sur des sous-ensembles différents.",TRUE,"Exactement ! 5 entraînements, 5 scores différents, on moyenne. Bien plus fiable qu'un seul split."
+cv,Un grand écart-type en CV signifie que le modèle est très performant.,FALSE,Non — grand écart-type = INSTABLE. Performance très variable selon les données. Signal d'alarme.
+overfit,Train R²=0.75 et Test R²=0.74 indique de l'overfitting.,FALSE,Non ! Train ≈ Test → pas d'overfitting. L'overfitting = Train >> Test (grande différence).
+underfit,Un modèle qui under-fit aura un bon score sur train mais mauvais sur test.,FALSE,"Non, c'est l'overfitting ! L'underfitting = mauvais score sur TRAIN ET test."
+linreg,La régression linéaire peut prédire des catégories comme chat/chien.,FALSE,Non ! Pour des catégories = régression LOGISTIQUE ou autres classifieurs. La régression linéaire prédit des valeurs continues.
+logreg,La régression logistique peut retourner une valeur comme 1500.,FALSE,"Non — la sortie est TOUJOURS entre 0 et 1 (sigmoïde). Jamais de valeurs hors [0,1]."
+dt,Un arbre de décision sans limite de profondeur généralise parfaitement.,FALSE,"Non — sans max_depth, il mémorise chaque point (overfitting sévère). R² train ≈ 1.0 mais test = médiocre."
+rf,Random Forest peut faire de la régression ET de la classification.,TRUE,"Oui ! RandomForestClassifier et RandomForestRegressor. Même principe, sorties différentes."
+xgb,XGBoost entraîne tous ses arbres en même temps (en parallèle).,FALSE,Non — XGBoost = BOOSTING = arbres en SÉRIE. Chaque arbre apprend des erreurs du précédent. Random Forest lui entraîne en parallèle.
+lgbm,LightGBM est généralement plus rapide à entraîner que XGBoost.,TRUE,Vrai ! Stratégie leaf-wise + optimisations → 10x+ plus rapide sur grands datasets.
+svm,SVM fonctionne très bien sur des datasets de 5 millions de lignes.,FALSE,"Non — SVM est O(n²) ou O(n³). Sur big data, inutilisable. Privilégier XGBoost / LightGBM."
+knn,KNN a une phase d'entraînement longue mais prédit rapidement.,FALSE,C'est l'inverse ! Aucun entraînement mais PRÉDICTION lente (calcule toutes les distances).
+kmeans,K-Means est supervisé car il utilise les labels pour former des groupes.,FALSE,Non — K-Means est NON-SUPERVISÉ. Il ne voit aucun label. Il groupe selon la similitude géométrique.
+nn,Un réseau de neurones est toujours le meilleur modèle quelle que soit la tâche.,FALSE,"Non ! Sur données tabulaires, XGBoost/LightGBM battent souvent les réseaux de neurones."
+accuracy,"Sur un dataset avec 95% de classe positive, accuracy 95% = excellent modèle.",FALSE,"Non ! Un modèle qui prédit TOUJOURS ""positif"" atteint 95% d'accuracy. Regarder Precision, Recall, F1."
+precision,Precision=1.0 signifie que le modèle détecte tous les cas positifs.,FALSE,Non ! Precision=1.0 = quand je dis OUI j'ai toujours raison. Mais je pourrais rater plein de positifs (Recall bas).
+recall,Recall=1.0 avec Precision=0.01 est un excellent modèle de détection de cancer.,FALSE,"Recall=1.0 = détecte tous les cancers ✓ MAIS Precision=0.01 = 99% des alarmes sont fausses. Le modèle dit ""cancer"" à tout le monde !"
+f1,F1=0.90 garantit que Precision et Recall sont tous les deux > 0.80.,FALSE,"Pas garanti, mais F1 force un équilibre. Ex: P=0.82, R=0.99 → F1=0.90."
+auc,AUC=0.5 signifie que le modèle est correct 50% du temps.,FALSE,AUC=0.5 = le modèle ne fait pas mieux que du hasard aléatoire. Il n'a rien appris.
+confmat,"Dans une matrice de confusion, on veut maximiser les valeurs sur la diagonale.",TRUE,Exactement ! Diagonale = VP et VN (bonnes prédictions). Hors-diagonale = FP et FN (erreurs).
+coeff,Un coefficient de −3 signifie que la feature a un impact positif.,FALSE,"Non ! β<0 = impact NÉGATIF. Quand cette feature augmente, Y diminue."
+pvalue,p-value > 0.05 prouve que la feature n'a aucun impact sur Y.,FALSE,Non — p>0.05 signifie qu'on ne peut pas rejeter l'hypothèse nulle à 95%. Pas une preuve d'absence d'effet.
+odds,Un odds ratio de 1 signifie que la variable double les chances.,FALSE,Non — OR=1 = AUCUN EFFET. OR=2 = double les chances.
+tstat,Un t-stat de −4.5 indique une feature non significative car négatif.,FALSE,Non ! Le SIGNE indique la direction. La VALEUR ABSOLUE indique la significativité. |−4.5|=4.5 >> 2 → très significatif.
+aic,Un AIC de 245 est toujours meilleur qu'un AIC de 312.,TRUE,"Oui — pour AIC, plus bas = meilleur (en comparant des modèles sur les mêmes données)."
+intercept,L'intercept représente l'impact de la feature la plus importante.,FALSE,Non — l'intercept est la valeur de Y quand TOUTES les features = 0. Aucune feature spécifique.
+sklearn,Scikit-Learn supporte l'entraînement de réseaux de neurones profonds sur GPU.,FALSE,Non — sklearn a MLPClassifier basique mais pas de GPU natif. Pour le deep learning → PyTorch ou TensorFlow.
+pytorch,PyTorch et TensorFlow ne peuvent pas être utilisés dans le même projet.,FALSE,"On peut utiliser les deux, mais en pratique on choisit. PyTorch = recherche, TF/Keras = production."
+tensorflow,Keras est une bibliothèque indépendante de TensorFlow.,FALSE,Maintenant intégré : tf.keras fait partie de TensorFlow 2.x. Keras est l'API haut-niveau officielle de TensorFlow.
+pandas,Pandas est conçu pour entraîner des modèles de machine learning.,FALSE,"Non — pandas est pour la MANIPULATION de données. Pour entraîner → sklearn, XGBoost, PyTorch..."
+numpy,NumPy est plus rapide que les listes Python pour les calculs numériques.,TRUE,"Vrai ! NumPy utilise C compilé + vectorisation SIMD. Multiplier 1M de nombres : NumPy = ms, liste Python = secondes."
+huggingface,Hugging Face permet d'utiliser des modèles comme GPT sans les ré-entraîner de zéro.,TRUE,Exactement ! Inference directe ou fine-tuning sur des milliers de modèles. Gain de temps et compute énorme.
+ch_regression,"Pour prédire un âge (valeur continue), on doit utiliser la régression logistique.",FALSE,"Non — la régression logistique est pour la CLASSIFICATION. Pour valeur continue → régression linéaire, RF, XGBoost."
+ch_classification,"Pour classifier du texte en sentiments, Random Forest est toujours optimal.",FALSE,"Non — en 2024, Transformers (BERT, RoBERTa) ou régression logistique sur TF-IDF battent RF sur le texte."
+pca,PCA sélectionne les k features les plus importantes parmi les features originales.,FALSE,"Non ! PCA CRÉE de nouvelles features = combinaisons linéaires des features originales. Elle transforme, pas sélectionne."
+regularization,L1 (Lasso) peut réduire certains coefficients exactement à 0.,TRUE,Exactement ! C'est la propriété clé de L1. Elle force la parcimonie — certaines features sont complètement exclues.
