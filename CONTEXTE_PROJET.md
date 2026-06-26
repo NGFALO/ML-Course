@@ -19,10 +19,10 @@
 
 **`ml_memos.html`** — Application web single-file (HTML + CSS + JS vanilla)
 
-- Chemin local : `C:\Users\Utilisateur\Documents\Github_repos\ML-Course\ml_memos.html`
+- Chemin local : `C:\Users\falo-\Documents\GitRepos\ML-Course\ml_memos.html`
 - URL GitHub Pages : `https://ngfalo.github.io/ML-Course/ml_memos.html`
 - Repo GitHub : `github.com/ngfalo/ML-Course`
-- Taille : ~1100 lignes, ~88KB
+- Taille actuelle : ~763 lignes, ~47KB (données externalisées dans Google Sheets)
 
 ---
 
@@ -30,16 +30,27 @@
 
 ### Structure du fichier HTML
 ```
-lignes 1–251     : <!DOCTYPE> + <style> CSS complet + HTML structure (header, nav, 4 tabs)
-lignes 252–685   : <script> + const TERMS=[...] (30 termes) + const FI={...}
-lignes 686–1107  : Tout le JS (fonctions) + Firebase config
-lignes 1108–1112 : Firebase Compat CDN scripts + initFirebase()
+lignes 1–268     : <!DOCTYPE> + <style> CSS complet + HTML structure (header, nav, 4 tabs)
+lignes 269–762   : <script> — tout le JS (data loader + logique + Firebase)
+lignes 763–768   : Firebase Compat CDN scripts + initFirebase()
 ```
 
 ### Règles techniques IMPORTANTES
 - **PAS de `type="module"`** sur le script principal — ça casse les `onclick=""` inline
 - **Firebase Compat SDK** (pas ESM) — chargé via `<script src>` séparés APRÈS le script principal
-- Pour écrire le fichier : utiliser `mcp__workspace__bash` avec `cat > "/sessions/sweet-dreamy-gauss/mnt/ML Course/ml_memos.html"` (le Write tool ne peut pas écrire dans ce dossier directement)
+- Pour écrire le fichier : utiliser `mcp__workspace__bash` avec Python ou `cat >` (le Write tool peut écrire directement dans ce dossier)
+- **Les données (TERMS) ne sont plus dans le HTML** — elles sont dans Google Sheets
+
+### Google Sheets — Source des données
+- **URL de base** : `https://docs.google.com/spreadsheets/d/e/2PACX-1vTYMHIf-bdjE8v1BzY6X4GI-X0UjsohSAbyp3-x0Uj2KtC0IkbOYKw8kQqTEOtwzfHrdDiJwFUlkw4J/pub?output=csv&sheet=`
+- **4 onglets** :
+  - `Terms` — id, name, full, family, image, tip, d2t, t2d_correct, t2d_wrong1/2/3
+  - `Rules` — term_id, val, label, type
+  - `Scenarios` — term_id, question, correct_choice, wrong1/2/3, explanation
+  - `TrueFalse` — term_id, statement, answer (TRUE/FALSE), explanation
+- **Édition** : ouvrir le Google Sheet et modifier directement → le site se met à jour au prochain chargement
+- **Ajout de terme** : ajouter une ligne dans `Terms` + lignes dans `Rules`/`Scenarios`/`TrueFalse`
+- Pour que Claude vérifie ou modifie du contenu : donner l'URL `?output=csv&sheet=NomOnglet`
 
 ### Firebase
 ```js
@@ -52,21 +63,24 @@ const FIREBASE_CONFIG = {
   appId: "1:1050580397485:web:04f892ec7afc7c4ed58524"
 };
 ```
-- Collection : `progress`, doc : `user_XXXXXXXXX` (stocké dans `localStorage` sous `ml_memos_uid`)
-- Domaine autorisé à ajouter : `ngfalo.github.io` (Firebase Console → Authentication → Authorized domains)
+- Collection : `progress`, doc : `user.uid` (UID Firebase Auth — identique sur tous les appareils)
+- **Auth : Google Sign-In** — `firebase.auth().signInWithPopup(GoogleAuthProvider)` + `onAuthStateChanged`
+- SDK chargés : `firebase-app-compat.js`, `firebase-auth-compat.js`, `firebase-firestore-compat.js`
+- Domaine autorisé : `ngfalo.github.io` (Firebase Console → Authentication → Authorized domains)
+- Google Sign-In activé : Firebase Console → Authentication → Sign-in method → Google
 
 ---
 
 ## 🎯 Fonctionnalités implémentées
 
 ### Onglet 📚 Glossaire
-- 30 termes ML en 6 familles : `eval`, `model`, `classif`, `summary`, `libs`, `choose`
+- Termes ML en 6 familles : `eval`, `model`, `classif`, `summary`, `libs`, `choose`
 - Filtrage par famille + recherche texte
 - Chaque carte : image mentale, seuils (good/warn/bad), tip
 - Badge ⭐ "Maîtrisé" visible si 5 bonnes réponses Anki
 
 ### Onglet 🎯 Quiz
-- **Mixte** : toutes questions mélangées (30 questions)
+- **Mixte** : toutes questions mélangées
 - **Scénario** : situations réelles avec 4 choix
 - **Vrai/Faux**
 - **Terme→Définition**
@@ -93,29 +107,31 @@ const FIREBASE_CONFIG = {
 - `saveProgress()` : debounce 800ms, sauvegarde `{correct, wrong, bestStreak, cardStats, updatedAt}`
 - `loadProgress()` : appelé au démarrage, restaure tout l'état
 - `showSync()` : message discret "☁️ Sauvegardé" / "⚠️ Hors ligne"
+- **Sync cross-device** : fonctionne via Google Sign-In (même UID sur tous les appareils)
 
 ---
 
-## 📊 Structure d'un terme (TERMS array)
+## 📊 Structure d'un terme (Google Sheets → TERMS array)
+
+Le JS reconstruit automatiquement cette structure depuis les 4 onglets Sheets :
 
 ```js
 {
-  id: 'r2',                    // identifiant unique
+  id: 'r2',                    // identifiant unique (onglet Terms)
   name: 'R²',                  // nom affiché
-  full: 'Coefficient de Détermination',  // nom complet
+  full: 'Coefficient de Détermination',
   family: 'eval',              // eval | model | classif | summary | libs | choose
-  image: '🎯 "..." ...',       // image mentale (texte riche)
-  rules: [
-    {val:'≥ 0.90', label:'Excellent ✅', type:'good'},   // good | warn | bad
-    ...
-  ],
-  tip: 'Astuce...',            // conseil pratique (optionnel)
+  image: '🎯 "..." ...',       // image mentale
+  tip: 'Astuce...',
   d2t: 'Définition...',        // question mode Def→Terme
   t2d: ['bonne réponse', 'mauvais1', 'mauvais2', 'mauvais3'],  // index 0 = correct
-  scenarios: [
-    {q:'Question scénario?', choice:'bonne réponse', wrongs:['a','b','c'], answer:'explication'}
+  rules: [                     // onglet Rules
+    {val:'≥ 0.90', label:'Excellent ✅', type:'good'}  // good | warn | bad
   ],
-  tf: [
+  scenarios: [                 // onglet Scenarios
+    {q:'Question?', choice:'bonne réponse', wrongs:['a','b','c'], answer:'explication'}
+  ],
+  tf: [                        // onglet TrueFalse
     {stmt:'Affirmation...', answer:true, explain:'Explication...'}
   ]
 }
@@ -123,11 +139,13 @@ const FIREBASE_CONFIG = {
 
 ---
 
-## 🐛 Bug corrigé (important à ne pas réintroduire)
+## 🐛 Bugs corrigés (important à ne pas réintroduire)
 
-**Bug** : Dans `buildQ()`, le code utilisait `qs.push({type:'sc', term:t, s})` (raccourci JS qui créait la propriété `s` au lieu de `sc`), ce qui faisait que `renderQ()` ne pouvait pas lire `q.sc.q` → aucun choix affiché en mode Scénario.
-
+**Bug 1** : Dans `buildQ()`, le code utilisait `qs.push({type:'sc', term:t, s})` (raccourci JS qui créait la propriété `s` au lieu de `sc`), ce qui faisait que `renderQ()` ne pouvait pas lire `q.sc.q` → aucun choix affiché en mode Scénario.
 **Fix** : `qs.push({type:'sc', term:t, sc:sc})` — toujours écrire explicitement `sc:sc`.
+
+**Bug 2** : L'ancien `getUserId()` générait un ID aléatoire stocké en `localStorage` → chaque appareil avait son propre doc Firebase → zéro sync cross-device.
+**Fix** : Google Sign-In — l'UID Firebase est identique sur tous les appareils.
 
 ---
 
@@ -135,6 +153,7 @@ const FIREBASE_CONFIG = {
 
 - **Single-file HTML** : tout dans un seul fichier, pas de framework
 - **Firebase Compat** : choisi car ESM casse les `onclick=""` inline
+- **Google Sheets** : source des données éditable sans toucher au HTML
 - **GitHub Pages** : hébergement gratuit, URL simple
 - **Pas de VPS** : Falo n'a pas les compétences pour le gérer
 - **Style** : colorful mais clean, family-pills colorées par catégorie
@@ -144,22 +163,22 @@ const FIREBASE_CONFIG = {
 
 ## 🚀 Pour déployer une nouvelle version sur GitHub
 
-1. Modifie `ml_memos.html` localement
-2. Va sur `github.com/ngfalo/ML-Course`
-3. Clique `ml_memos.html` → ✏️ → colle le contenu → Commit
-
-Ou en terminal :
 ```bash
 git add ml_memos.html
 git commit -m "description du changement"
 git push
 ```
 
+Ou via GitHub web : `github.com/ngfalo/ML-Course` → `ml_memos.html` → ✏️ → coller → Commit
+
 ---
 
 ## 💬 Comment reprendre avec Claude
 
 Dis simplement :
-> *"Lis CONTEXTE_PROJET.md et reprends le projet ml_memos.html. Je veux [ajouter X / corriger Y / etc.]"*
+> *"Lis CONTEXTE_PROJET.md et reprends le projet. Je veux [ajouter X / corriger Y / etc.]"*
+
+Pour modifier du **contenu** (termes, quiz, phrases) :
+> *"Lis le Google Sheet [URL] et [modifie / ajoute / vérifie] ..."*
 
 Claude lira ce fichier + le fichier HTML et sera immédiatement opérationnel.
