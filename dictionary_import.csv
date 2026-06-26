@@ -1,0 +1,45 @@
+word,definition
+accuracy,Proportion de prédictions correctes parmi toutes les prédictions. Trompeuse si les classes sont déséquilibrées.
+AUC,Area Under the Curve — surface sous la courbe ROC. Mesure la capacité du modèle à distinguer les classes (1.0 = parfait).
+ROC,Receiver Operating Characteristic — courbe qui trace le taux de vrais positifs vs faux positifs à chaque seuil.
+F1,Moyenne harmonique de la précision et du rappel. Utile quand les deux comptent autant.
+précision,Parmi toutes les prédictions positives, combien sont réellement positives ? (TP / TP+FP)
+rappel,Parmi tous les vrais positifs, combien le modèle en a détecté ? (TP / TP+FN) — aussi appelé sensibilité.
+recall,Parmi tous les vrais positifs, combien le modèle en a détecté ? (TP / TP+FN) — aussi appelé sensibilité.
+overfitting,Le modèle a trop mémorisé les données d'entraînement et perd en généralisation sur de nouvelles données.
+underfitting,Le modèle est trop simple pour capturer les patterns dans les données — mauvaises performances partout.
+feature,Variable d'entrée utilisée par le modèle pour faire une prédiction. Aussi appelée attribut ou variable.
+label,La valeur cible à prédire (ex: 0 ou 1 en classification, un prix en régression).
+regularisation,Technique pour pénaliser la complexité du modèle et réduire l'overfitting. Ex: L1 (Lasso), L2 (Ridge).
+hyperparamètre,Paramètre défini avant l'entraînement (ex: learning rate, nombre d'arbres). Opposé aux paramètres appris.
+gradient,Direction et magnitude de la variation d'une fonction. Utilisé en descente de gradient pour minimiser la loss.
+epoch,Un passage complet sur tout le dataset d'entraînement. Plusieurs epochs = plusieurs passages.
+batch,Sous-ensemble de données utilisé pour une mise à jour des paramètres. Taille de batch = batch size.
+dropout,Technique de régularisation qui désactive aléatoirement des neurones à chaque epoch pour éviter l'overfitting.
+softmax,Fonction qui transforme un vecteur de scores en probabilités (somme = 1). Utilisée en sortie de classification multiclasse.
+sigmoid,Fonction qui écrase une valeur entre 0 et 1. Utilisée pour les probabilités en classification binaire.
+clustering,Regrouper des données en groupes (clusters) sans étiquettes — apprentissage non supervisé.
+classification,Tâche où le modèle prédit une catégorie discrète (ex: spam/non-spam, chien/chat).
+régression,Tâche où le modèle prédit une valeur continue (ex: prix d'une maison, température).
+validation,Ensemble de données séparé de l'entraînement, utilisé pour ajuster les hyperparamètres sans toucher au test.
+normalisation,Mettre les features à la même échelle (ex: entre 0 et 1) pour accélérer et stabiliser l'entraînement.
+standardisation,Transformer les features pour avoir une moyenne de 0 et un écart-type de 1 (Z-score).
+prédiction,La sortie du modèle — valeur estimée pour un exemple donné.
+RMSE,Root Mean Squared Error — racine de la moyenne des erreurs au carré. Pénalise les grosses erreurs.
+MAE,Mean Absolute Error — moyenne des erreurs absolues. Plus robuste aux valeurs extrêmes que le RMSE.
+R²,Coefficient de détermination — part de la variance expliquée par le modèle. 1.0 = parfait, 0 = inutile.
+baseline,Modèle simple de référence (ex: toujours prédire la classe majoritaire). Sert de point de comparaison.
+Gini,Mesure d'impureté utilisée dans les arbres de décision pour choisir le meilleur split.
+entropie,Mesure de désordre ou d'incertitude. Utilisée comme critère de split dans les arbres de décision.
+boosting,Technique d'ensemble qui entraîne des modèles séquentiellement, chacun corrigeant les erreurs du précédent.
+bagging,Technique d'ensemble qui entraîne des modèles en parallèle sur des sous-ensembles aléatoires du dataset.
+embedding,Représentation vectorielle dense d'une donnée (mot, image…) dans un espace de dimension réduite.
+tokenisation,Découpage du texte en unités (tokens) — mots, sous-mots ou caractères — avant traitement par un modèle.
+inférence,Phase où un modèle entraîné fait des prédictions sur de nouvelles données (opposé à l'entraînement).
+entraînement,Phase où le modèle apprend à partir des données en ajustant ses paramètres pour minimiser la loss.
+loss,Fonction d'erreur que le modèle cherche à minimiser pendant l'entraînement. Ex: cross-entropy, MSE.
+dataset,Ensemble de données structurées utilisé pour entraîner, valider ou tester un modèle.
+split,Division du dataset en ensembles train/validation/test pour évaluer le modèle de façon honnête.
+matrice,Structure de données 2D (lignes × colonnes). La matrice de confusion compare prédictions vs réalité.
+variance,En ML: sensibilité du modèle aux variations des données d'entraînement. Haute variance = overfitting.
+biais,En ML: erreur systématique du modèle. Biais élevé = underfitting. Compromis biais-variance fondamental.

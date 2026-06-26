@@ -60,7 +60,7 @@ f1,0.65–0.84,Acceptable,warn
 f1,< 0.60,Mauvais ❌,bad
 auc,AUC = 1.0,Parfait ✓,good
 auc,AUC > 0.90,Excellent,good
-auc,AUC = 0.5,= hasard ❌,bad
+auc,AUC = 0.5,Hasard pur (inutile) ❌,bad
 auc,AUC < 0.5,Pire que le hasard !,bad
 confmat,Diagonale = bon,VP et VN,good
 confmat,Hors diagonale,FP et FN = erreurs,bad

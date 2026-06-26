@@ -79,16 +79,16 @@ const FIREBASE_CONFIG = {
 - Chaque carte : image mentale, seuils (good/warn/bad), tip
 - Badge ⭐ "Maîtrisé" visible si 5 bonnes réponses Anki
 
-### Onglet 🎯 Quiz
-- **Mixte** : toutes questions mélangées
-- **Scénario** : situations réelles avec 4 choix
-- **Vrai/Faux**
-- **Terme→Définition**
-- **Définition→Terme**
-- **⚡ Speed Round** : 15 questions, 15s par question, barre chrono colorée
-- **💀 Boss Battle** : une seule erreur = game over
-- Streak + score en temps réel
-- Explication affichée après chaque réponse
+### Onglet 🎯 Quiz — Système de sessions (style Duolingo)
+- **Écran de sélection de mode** (`mode-select-view`) : grille de 7 modes
+- **Modes** : Mixte (10q), Scénario (10q), Vrai/Faux (10q), Terme→Déf (10q), Déf→Terme (10q), ⚡ Speed Round (15q, 15s/q), 💀 Boss Battle (20q, 1 erreur = game over)
+- **Session immersive** (`session-view`) : header avec bouton Quitter, barre de progression, compteur
+- **Navigation lockée** : changer d'onglet pendant une session déclenche modal d'abandon
+- **Sauvegarde auto** : `localStorage` key `ml_quiz_session`, TTL 30 min — reprise au rechargement
+- **Écran de fin** (`end-view`) : score %, XP (+10/bonne, +20 si 100%, +10 si ≥80%), liste des erreurs, message motivant
+- **Fonctions clés** : `showModeSelect()`, `launchSession(mode)`, `showSessionView()`, `endSession(bossLost)`, `saveSession()`, `resumeSession()`, `confirmAbandon()`, `doAbandon()`
+- **Compteurs session** : `sCorrect`, `sWrong`, `sessionMistakes[]` (séparés des compteurs globaux)
+- Explication affichée après chaque réponse via `showFB()`
 
 ### Onglet 🃏 Anki
 - Répétition espacée (SRS) : intervalles 1j, 2j, 4j, 7j, 14j
@@ -136,6 +136,16 @@ Le JS reconstruit automatiquement cette structure depuis les 4 onglets Sheets :
   ]
 }
 ```
+
+---
+
+## 🔜 Prochaine fonctionnalité — Dictionnaire / Tooltips
+
+- Nouveau onglet Google Sheets : `Dictionary` — colonnes `word`, `definition`
+- Les mots ML utiles dans l'app sont **soulignés** (ex: ROC, AUC, feature, Modèle, régularisation…)
+- Cliquer sur un mot souligné → popup tooltip avec définition brève
+- Claude juge quels mots sont "utiles ML" (pas les mots basiques ou UI)
+- À implémenter : charger `Dictionary` depuis Sheets, scanner le texte affiché, wrapper les mots dans `<span class="dict-word" data-word="ROC">ROC</span>`, tooltip CSS/JS
 
 ---
 

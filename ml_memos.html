@@ -154,6 +154,41 @@
   .user-chip span{font-size:.75rem;color:white;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .signout-btn{background:none;border:none;color:rgba(255,255,255,.7);font-size:.7rem;cursor:pointer;padding:0 0 0 4px;text-decoration:underline;}
   .signout-btn:hover{color:white;}
+
+  /* ── SESSION ── */
+  .mode-select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.2rem;margin-top:1.5rem;}
+  .mode-card{background:white;border-radius:20px;border:2px solid var(--border);padding:1.5rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:.5rem;position:relative;overflow:hidden;}
+  .mode-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  .mode-card-badge{position:absolute;top:1rem;right:1rem;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:800;letter-spacing:.5px;}
+  .mode-icon{font-size:2.5rem;line-height:1.1;}
+  .mode-name{font-size:1.1rem;font-weight:800;margin-top:.2rem;}
+  .mode-meta{font-size:.75rem;color:var(--muted);font-weight:600;}
+  .mode-desc{font-size:.82rem;color:var(--muted);line-height:1.5;flex:1;}
+  .mode-play-btn{margin-top:.8rem;padding:.65rem;border-radius:50px;border:none;color:white;font-size:.85rem;font-weight:700;cursor:pointer;transition:transform .1s;}
+  .mode-play-btn:hover{transform:scale(1.03);}
+  .session-header{display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;background:white;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:90;}
+  .session-prog-wrap{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .session-prog-bar{height:100%;background:linear-gradient(90deg,#6366f1,#10b981);border-radius:4px;transition:width .4s ease;}
+  .session-qcount{font-size:.8rem;font-weight:700;color:var(--muted);white-space:nowrap;min-width:54px;text-align:right;}
+  .abandon-btn{border:none;background:none;cursor:pointer;color:var(--muted);font-size:.82rem;font-weight:700;padding:.35rem .8rem;border-radius:8px;transition:all .15s;white-space:nowrap;}
+  .abandon-btn:hover{background:#fee2e2;color:#991b1b;}
+  .session-end{max-width:540px;margin:2rem auto;background:white;border-radius:24px;padding:2.5rem 2rem;box-shadow:0 8px 30px rgba(0,0,0,.1);text-align:center;}
+  .end-score-circle{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;margin:1rem auto;border:5px solid;}
+  .end-xp{font-size:1.8rem;font-weight:900;color:#f59e0b;animation:xpPop .7s ease-out forwards;margin:.4rem 0;}
+  @keyframes xpPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+  .mistakes-toggle{background:none;border:2px solid var(--border);border-radius:50px;padding:.45rem 1.2rem;cursor:pointer;font-size:.82rem;font-weight:700;color:var(--muted);margin-top:1rem;transition:all .2s;}
+  .mistakes-toggle:hover{border-color:#ef4444;color:#ef4444;}
+  .mistakes-list{text-align:left;margin-top:.8rem;}
+  .mistake-item{padding:.6rem .8rem;border-radius:8px;background:#fff5f5;border-left:3px solid var(--bad);margin-bottom:.5rem;font-size:.82rem;line-height:1.5;}
+  .mistake-term{font-weight:700;color:#991b1b;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:white;border-radius:20px;padding:2rem;max-width:360px;width:90%;text-align:center;animation:fadeIn .2s;}
+  @media(max-width:600px){.mode-select-grid{grid-template-columns:1fr;}.session-header{padding:.6rem 1rem;gap:.5rem;}.session-end{padding:1.5rem 1rem;margin:1rem;}}
+  /* ── DICTIONARY ── */
+  .dict-word{border-bottom:1.5px dotted #6366f1;cursor:pointer;color:inherit;}
+  .dict-word:hover{background:var(--eval-light);border-radius:2px;}
+  .dict-tooltip{position:fixed;background:#1a1a2e;color:white;padding:.65rem .95rem;border-radius:10px;font-size:.82rem;max-width:230px;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,.3);line-height:1.5;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -207,43 +242,50 @@
 
 <!-- TAB QUIZ -->
 <div id="tab-quiz" style="display:none">
-<main>
-  <div class="section-title">🎯 Quiz interactif</div>
-  <div class="section-desc">4 types · Speed Round ⚡ · Boss Battle 💀 · Streak · Explication après chaque réponse</div>
-  <div class="quiz-mode-bar">
-    <button class="mode-btn active" data-mode="all" onclick="setMode('all')">🎲 Mixte</button>
-    <button class="mode-btn" data-mode="scenario" onclick="setMode('scenario')">🎬 Scénario</button>
-    <button class="mode-btn" data-mode="tf" onclick="setMode('tf')">✅ Vrai/Faux</button>
-    <button class="mode-btn" data-mode="term2def" onclick="setMode('term2def')">📖 Terme→Déf</button>
-    <button class="mode-btn" data-mode="def2term" onclick="setMode('def2term')">🔍 Déf→Terme</button>
-    <button class="mode-btn" data-mode="speed" onclick="setMode('speed')">⚡ Speed Round</button>
-    <button class="mode-btn" data-mode="boss" onclick="setMode('boss')">💀 Boss Battle</button>
+  <div id="mode-select-view">
+  <main>
+    <div class="section-title">🎯 Choisir un mode</div>
+    <div class="section-desc">Lance une session · Reste dedans jusqu'à la fin · XP et résultats à la sortie</div>
+    <div id="mode-select-grid" class="mode-select-grid"></div>
+  </main>
   </div>
-  <div id="speed-bar-wrap" class="speed-bar-wrap" style="display:none;max-width:700px;margin:0 auto 1rem;"><div id="speed-bar" class="speed-bar" style="width:100%;background:var(--good)"></div></div>
-  <div id="quiz-area">
-    <div class="quiz-card" id="quiz-card">
-      <div class="quiz-family-badge" id="qfamily"></div>
-      <div class="quiz-type-label" id="qtype-label"></div>
-      <div class="quiz-question" id="qquestion"></div>
-      <div id="qchoices"></div>
-      <div class="quiz-feedback" id="qfeedback"></div>
-      <div class="quiz-controls">
-        <div>
-          <div class="quiz-progress" id="qprogress">Question 1</div>
-          <div class="quiz-score-live" id="qscore-live"></div>
+  <div id="session-view" style="display:none">
+    <div class="session-header">
+      <button class="abandon-btn" onclick="confirmAbandon()">✕ Quitter</button>
+      <div class="session-prog-wrap"><div class="session-prog-bar" id="session-prog-bar" style="width:0%"></div></div>
+      <div class="session-qcount" id="session-qcount">0/0</div>
+    </div>
+    <div id="speed-bar-wrap" class="speed-bar-wrap" style="display:none;max-width:700px;margin:.5rem auto 0;"><div id="speed-bar" class="speed-bar" style="width:100%;background:var(--good)"></div></div>
+    <main>
+      <div id="quiz-area">
+        <div class="quiz-card" id="quiz-card">
+          <div class="quiz-family-badge" id="qfamily"></div>
+          <div class="quiz-type-label" id="qtype-label"></div>
+          <div class="quiz-question" id="qquestion"></div>
+          <div id="qchoices"></div>
+          <div class="quiz-feedback" id="qfeedback"></div>
+          <div class="quiz-controls">
+            <div class="quiz-score-live" id="qscore-live"></div>
+            <button class="btn-next" id="btn-next" onclick="nextQuestion()">Suivant →</button>
+          </div>
         </div>
-        <button class="btn-next" id="btn-next" onclick="nextQuestion()">Question suivante →</button>
       </div>
-    </div>
-    <div class="quiz-end" id="quiz-end">
-      <div class="end-emoji" id="end-emoji">🎉</div>
-      <div class="end-title" id="end-title">Bien joué !</div>
-      <div class="end-score" id="end-score"></div>
-      <div style="color:var(--muted);font-size:.9rem;margin-top:4px" id="end-streak"></div>
-      <button class="btn-restart" onclick="restartQuiz()">🔄 Rejouer</button>
+    </main>
+  </div>
+  <div id="end-view" style="display:none">
+  <main><div id="end-content"></div></main>
+  </div>
+</div>
+<div class="modal-overlay" id="abandon-modal">
+  <div class="modal-box">
+    <div style="font-size:2.5rem">🚪</div>
+    <div style="font-size:1.2rem;font-weight:800;margin:.5rem 0">Abandonner la session ?</div>
+    <div style="color:var(--muted);font-size:.88rem;margin-bottom:1.5rem">Ta progression dans cette session sera perdue.</div>
+    <div style="display:flex;gap:1rem">
+      <button onclick="closeAbandonModal()" style="flex:1;padding:.8rem;border-radius:50px;border:2px solid var(--border);background:white;cursor:pointer;font-weight:700">Continuer ▶</button>
+      <button onclick="doAbandon()" style="flex:1;padding:.8rem;border-radius:50px;border:none;background:#ef4444;color:white;cursor:pointer;font-weight:700">Abandonner</button>
     </div>
   </div>
-</main>
 </div>
 
 <!-- TAB ANKI -->
@@ -306,9 +348,12 @@ async function loadTermsFromSheets(){
 async function init(){
   showSync('⏳ Chargement des données...');
   try{
-    TERMS=await loadTermsFromSheets();
+    [TERMS]=await Promise.all([loadTermsFromSheets(),loadDictionary()]);
     showSync('✅ '+TERMS.length+' termes chargés');
     renderCards();
+    const saved=loadSavedSession();
+    if(saved&&TERMS.length){resumeSession();}
+    else{showModeSelect();}
   }catch(e){showSync('⚠️ Erreur chargement — vérifier la connexion');console.error(e);}
 }
 
@@ -317,12 +362,25 @@ const FI={eval:{label:'📊 Évaluation',cls:'pill-eval'},model:{label:'🤖 Mod
 // STATE
 // ─────────────────────────────────────────
 let currentFilter='all',currentSearch='';
-let quizMode='all',quizFamilyFilter=null,quizQueue=[],qIdx=0;
+let quizMode='all',quizQueue=[],qIdx=0;
 let correct=0,wrong=0,streak=0,bestStreak=0,answered=false;
-let cardStats={};      // {termId: {correct,wrong,lastSeen,nextDue}}
+let cardStats={};
 let ankiQueue=[],ankiIdx=0,ankiFlipped=false,ankiCurrentTerm=null;
 let speedTimer=null,speedTimeLeft=15;
 const SPEED_TIME=15;
+// ── SESSION ──
+let sessionActive=false,sessionMode=null,sessionStartTime=0;
+let sCorrect=0,sWrong=0,sStreak=0,sessionMistakes=[],pendingTab=null;
+const SESSION_KEY='ml_quiz_session';
+const MODES=[
+  {id:'all',   icon:'🎲',name:'Mixte',      desc:'Toutes les questions — quiz varié',         color:'#6366f1',n:10},
+  {id:'scenario',icon:'🎬',name:'Scénario', desc:'Situations réelles à résoudre',             color:'#10b981',n:10},
+  {id:'tf',    icon:'✅',name:'Vrai / Faux', desc:'Décide en une fraction de seconde',         color:'#f59e0b',n:10},
+  {id:'term2def',icon:'📖',name:'Terme → Déf',desc:'Trouve la bonne définition',             color:'#ec4899',n:10},
+  {id:'def2term',icon:'🔍',name:'Déf → Terme',desc:'Quel terme correspond ?',                color:'#8b5cf6',n:10},
+  {id:'speed', icon:'⚡',name:'Speed Round', desc:'15 questions · 15 secondes chacune',       color:'#f59e0b',n:15,badge:'CHRONO'},
+  {id:'boss',  icon:'💀',name:'Boss Battle', desc:'Une seule erreur = GAME OVER',             color:'#ef4444',n:20,badge:'DANGER'},
+];
 
 // ─────────────────────────────────────────
 // GLOSSAIRE
@@ -340,67 +398,220 @@ function renderCards(){
   if(!TERMS.length){document.getElementById('cards-grid').innerHTML='<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">⏳ Chargement des termes...</p>';return;}
   const q=currentSearch.toLowerCase();
   const v=TERMS.filter(t=>(currentFilter==='all'||t.family===currentFilter)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||t.id.includes(q)||(t.d2t||'').toLowerCase().includes(q)));
-  document.getElementById('cards-grid').innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';
+  const cg=document.getElementById('cards-grid');
+  cg.innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';
+  applyDictionary(cg);
 }
 function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderCards();}
 function filterCards(){currentSearch=document.getElementById('search').value;renderCards();}
 
 // ─────────────────────────────────────────
-// QUIZ
+// QUIZ — SESSION SYSTEM
 // ─────────────────────────────────────────
 function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 
-function setMode(m){
-  quizMode=m;
-  clearInterval(speedTimer);
-  const sbw=document.getElementById('speed-bar-wrap');
-  if(sbw)sbw.style.display='none';
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+function showModeSelect(){
+  document.getElementById('mode-select-view').style.display='';
+  document.getElementById('session-view').style.display='none';
+  document.getElementById('end-view').style.display='none';
+  const saved=loadSavedSession();
+  let banner='';
+  if(saved){
+    const mn=MODES.find(m=>m.id===saved.mode);
+    banner=`<div style="background:#eef2ff;border:2px solid #6366f1;border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
+      <div><div style="font-weight:800;color:#6366f1">▶ Session en cours : ${mn?mn.icon+' '+mn.name:saved.mode}</div>
+      <div style="font-size:.78rem;color:var(--muted)">Question ${saved.qIdx+1} · ${saved.sCorrect} ✓ · ${saved.sWrong} ✗</div></div>
+      <div style="display:flex;gap:.6rem">
+        <button onclick="resumeSession()" style="padding:.45rem 1rem;border-radius:50px;border:none;background:#6366f1;color:white;font-weight:700;cursor:pointer;font-size:.82rem">Reprendre</button>
+        <button onclick="discardSavedSession()" style="padding:.45rem 1rem;border-radius:50px;border:2px solid var(--border);background:white;cursor:pointer;font-size:.82rem;font-weight:700">Supprimer</button>
+      </div></div>`;
+  }
+  document.getElementById('mode-select-grid').innerHTML=banner+MODES.map(m=>`
+    <div class="mode-card" style="border-top:4px solid ${m.color}">
+      ${m.badge?`<span class="mode-card-badge" style="background:${m.color}22;color:${m.color}">${m.badge}</span>`:''}
+      <div class="mode-icon">${m.icon}</div>
+      <div class="mode-name">${m.name}</div>
+      <div class="mode-meta">${m.n} questions${m.id==='speed'?' · ⏱ 15s/question':''}${m.id==='boss'?' · ☠️ 1 vie':''}</div>
+      <div class="mode-desc">${m.desc}</div>
+      <button class="mode-play-btn" style="background:${m.color}" onclick="launchSession('${m.id}')">Jouer →</button>
+    </div>`).join('');
+}
+
+function launchSession(mode){
+  quizMode=mode;sessionMode=mode;sessionActive=true;sessionStartTime=Date.now();
+  sCorrect=0;sWrong=0;sStreak=0;sessionMistakes=[];
+  qIdx=0;streak=0;answered=false;
   buildQ();
-  qIdx=0;correct=0;wrong=0;streak=0;answered=false;
-  document.getElementById('quiz-end').classList.remove('show');
-  document.getElementById('quiz-card').style.display='';
+  saveSession();
+  showSessionView();
   renderQ();
 }
 
-function buildQ(){
-  let pool=TERMS;
-  if(quizMode==='speed'){
-    let qs=[];
-    pool.forEach(t=>{if(t.t2d)qs.push({type:'t2d',term:t});});
-    quizQueue=shuf(qs).slice(0,15);
+function showSessionView(){
+  document.getElementById('mode-select-view').style.display='none';
+  document.getElementById('session-view').style.display='';
+  document.getElementById('end-view').style.display='none';
+  document.getElementById('quiz-card').style.display='';
+  updateSessionHeader();
+}
+
+function updateSessionHeader(){
+  const total=quizQueue.length,done=qIdx;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('session-prog-bar').style.width=pct+'%';
+  document.getElementById('session-qcount').textContent=done+'/'+total;
+}
+
+// localStorage session
+function saveSession(){
+  if(!sessionActive)return;
+  try{
+    const ids=quizQueue.map(q=>({type:q.type,termId:q.term.id,
+      scIdx:q.type==='sc'?(q.term.scenarios||[]).indexOf(q.sc):-1,
+      tfIdx:q.type==='tf'?(q.term.tf||[]).indexOf(q.tf):-1}));
+    localStorage.setItem(SESSION_KEY,JSON.stringify(
+      {mode:sessionMode,questionIds:ids,qIdx,sCorrect,sWrong,sStreak,
+       startedAt:sessionStartTime,mistakes:sessionMistakes}));
+  }catch(e){}
+}
+function loadSavedSession(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+    if(!d)return null;
+    if(Date.now()-d.startedAt>30*60*1000){localStorage.removeItem(SESSION_KEY);return null;}
+    return d;
+  }catch(e){return null;}
+}
+function discardSavedSession(){localStorage.removeItem(SESSION_KEY);showModeSelect();}
+function resumeSession(){
+  const d=loadSavedSession();
+  if(!d||!TERMS.length)return;
+  quizMode=d.mode;sessionMode=d.mode;sessionActive=true;sessionStartTime=d.startedAt;
+  sCorrect=d.sCorrect||0;sWrong=d.sWrong||0;sStreak=d.sStreak||0;
+  qIdx=d.qIdx||0;streak=d.sStreak||0;sessionMistakes=d.mistakes||[];answered=false;
+  quizQueue=(d.questionIds||[]).map(qi=>{
+    const term=TERMS.find(t=>t.id===qi.termId);if(!term)return null;
+    const q={type:qi.type,term};
+    if(qi.type==='sc')q.sc=(term.scenarios||[])[qi.scIdx];
+    if(qi.type==='tf')q.tf=(term.tf||[])[qi.tfIdx];
+    return q;
+  }).filter(Boolean);
+  showSessionView();renderQ();
+}
+
+// Abandon modal
+function confirmAbandon(){document.getElementById('abandon-modal').classList.add('show');}
+function closeAbandonModal(){document.getElementById('abandon-modal').classList.remove('show');}
+function doAbandon(){
+  closeAbandonModal();sessionActive=false;
+  localStorage.removeItem(SESSION_KEY);clearInterval(speedTimer);
+  if(pendingTab){const t=pendingTab;pendingTab=null;_doShowTab(t);}
+  else showModeSelect();
+}
+
+// ─────────────────────────────────────────
+// DICTIONARY / TOOLTIPS
+// ─────────────────────────────────────────
+let DICTIONARY={};
+let _dictRegex=null;
+let _dictTip=null;
+
+async function loadDictionary(){
+  try{
+    const r=await fetch(SHEET_BASE+'Dictionary');
+    if(!r.ok)return;
+    const rows=parseCSV(await r.text());
+    rows.forEach(row=>{
+      if(row.word&&row.definition)DICTIONARY[row.word.toLowerCase()]={word:row.word,def:row.definition};
+    });
+    const keys=Object.keys(DICTIONARY).sort((a,b)=>b.length-a.length);
+    if(keys.length)_dictRegex=new RegExp('\\b('+keys.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
+  }catch(e){console.warn('Dictionary tab not found — skipping:',e);}
+}
+function applyDictionary(el){
+  if(!_dictRegex||!el)return;
+  _dictRegex.lastIndex=0;
+  _walkDictNodes(el);
+}
+function _walkDictNodes(el){
+  if(el.nodeType===3){
+    const text=el.textContent;
+    _dictRegex.lastIndex=0;
+    if(!_dictRegex.test(text)){_dictRegex.lastIndex=0;return;}
+    _dictRegex.lastIndex=0;
+    const frag=document.createDocumentFragment();
+    let last=0,m;
+    while((m=_dictRegex.exec(text))!==null){
+      if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)));
+      const sp=document.createElement('span');
+      sp.className='dict-word';
+      sp.textContent=m[0];
+      sp.dataset.dk=m[0].toLowerCase();
+      frag.appendChild(sp);
+      last=m.index+m[0].length;
+    }
+    if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));
+    el.parentNode.replaceChild(frag,el);
     return;
   }
+  if(el.nodeType===1&&!['SCRIPT','STYLE','INPUT','TEXTAREA','BUTTON'].includes(el.tagName)&&!el.classList.contains('dict-word')){
+    [...el.childNodes].forEach(_walkDictNodes);
+  }
+}
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('dict-word')){
+    const entry=DICTIONARY[e.target.dataset.dk];
+    if(!entry)return;
+    if(_dictTip){_dictTip.remove();_dictTip=null;}
+    const tt=document.createElement('div');
+    tt.className='dict-tooltip';
+    tt.innerHTML=`<strong>${entry.word}</strong><br><span style="opacity:.85">${entry.def}</span>`;
+    document.body.appendChild(tt);
+    _dictTip=tt;
+    const r=e.target.getBoundingClientRect();
+    tt.style.left=Math.min(r.left,window.innerWidth-245)+'px';
+    tt.style.top=(r.bottom+6)+'px';
+    e.stopPropagation();
+  } else {
+    if(_dictTip){_dictTip.remove();_dictTip=null;}
+  }
+});
+
+function buildQ(){
+  const m=MODES.find(x=>x.id===quizMode);
+  const n=m?m.n:10;
+  let qs=[];
+  if(quizMode==='speed'){
+    TERMS.forEach(t=>{if(t.t2d)qs.push({type:'t2d',term:t});});
+    quizQueue=shuf(qs).slice(0,n);return;
+  }
   if(quizMode==='boss'){
-    let qs=[];
-    pool.forEach(t=>{
+    TERMS.forEach(t=>{
       (t.scenarios||[]).forEach(sc=>qs.push({type:'sc',term:t,sc:sc}));
       (t.tf||[]).forEach(tf=>qs.push({type:'tf',term:t,tf:tf}));
     });
-    quizQueue=shuf(qs).slice(0,20);
-    return;
+    quizQueue=shuf(qs).slice(0,n);return;
   }
-  let qs=[];
-  pool.forEach(t=>{
+  TERMS.forEach(t=>{
     if(t.t2d&&(quizMode==='all'||quizMode==='term2def'))qs.push({type:'t2d',term:t});
     if(t.d2t&&(quizMode==='all'||quizMode==='def2term'))qs.push({type:'d2t',term:t});
     (t.scenarios||[]).forEach(sc=>{if(quizMode==='all'||quizMode==='scenario')qs.push({type:'sc',term:t,sc:sc});});
     (t.tf||[]).forEach(tf=>{if(quizMode==='all'||quizMode==='tf')qs.push({type:'tf',term:t,tf:tf});});
   });
-  quizQueue=shuf(qs).slice(0,30);
+  quizQueue=shuf(qs).slice(0,n);
 }
 
 function renderQ(){
   clearInterval(speedTimer);
   if(!quizQueue.length){buildQ();}
-  if(qIdx>=quizQueue.length){showEnd();return;}
+  if(qIdx>=quizQueue.length){endSession();return;}
   answered=false;
   const q=quizQueue[qIdx];const t=q.term;const fi=FI[t.family];
   document.getElementById('qfamily').innerHTML=`<span class="family-pill ${fi.cls}">${fi.label} · ${t.name}</span>`;
   document.getElementById('qfeedback').className='quiz-feedback';
   document.getElementById('btn-next').className='btn-next';
-  document.getElementById('qprogress').textContent=`Question ${qIdx+1} / ${quizQueue.length}`;
-  document.getElementById('qscore-live').innerHTML=`<span class="sc">✓ ${correct}</span> · <span class="sw">✗ ${wrong}</span> · 🔥 ${streak}`;
+  updateSessionHeader();
+  document.getElementById('qscore-live').innerHTML=`<span class="sc">✓ ${sCorrect}</span> · <span class="sw">✗ ${sWrong}</span> · 🔥 ${streak}`;
   const ch=document.getElementById('qchoices');ch.innerHTML='';
 
   // Speed bar
@@ -423,46 +634,52 @@ function renderQ(){
     document.getElementById('qtype-label').textContent='📖 Terme → Définition';
     document.getElementById('qquestion').textContent=`Que signifie "${t.name}" (${t.full}) ?`;
     const ca=t.t2d[0];
-    shuf([...t.t2d]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,t.image+(t.tip?'\n\n💡 '+t.tip:''));ch.appendChild(btn);});
+    shuf([...t.t2d]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,t.image+(t.tip?'\n\n💡 '+t.tip:''),t.name);ch.appendChild(btn);});
   } else if(q.type==='d2t'){
     document.getElementById('qtype-label').textContent='🔍 Définition → Terme';
     document.getElementById('qquestion').textContent=t.d2t;
     const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);
-    shuf([t.name,...others]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===t.name,t.name,t.image);ch.appendChild(btn);});
+    shuf([t.name,...others]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===t.name,t.name,t.image,t.name);ch.appendChild(btn);});
   } else if(q.type==='sc'){
     document.getElementById('qtype-label').textContent='🎬 Scénario réel';
     document.getElementById('qquestion').textContent=q.sc.q;
     const ca=q.sc.choice;const expl=q.sc.answer;
-    shuf([ca,...q.sc.wrongs]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,expl);ch.appendChild(btn);});
+    shuf([ca,...q.sc.wrongs]).forEach(opt=>{const btn=document.createElement('button');btn.className='choice-btn';btn.textContent=opt;btn.onclick=()=>handleC(btn,opt===ca,ca,expl,t.name);ch.appendChild(btn);});
   } else if(q.type==='tf'){
     document.getElementById('qtype-label').textContent='✅ Vrai ou Faux ?';
     document.getElementById('qquestion').textContent='"'+q.tf.stmt+'"';
     const ans=q.tf.answer;const expl=q.tf.explain||'';
     ch.innerHTML=`<div class="tf-choices"><button class="tf-btn vrai" onclick="handleTF(this,true)">✅ VRAI</button><button class="tf-btn faux" onclick="handleTF(this,false)">❌ FAUX</button></div>`;
-    ch._tfAnswer=ans;ch._tfExpl=expl;
+    ch._tfAnswer=ans;ch._tfExpl=expl;ch._tfTermName=t.name;
   }
+  applyDictionary(document.getElementById('qquestion'));
 }
 
 function timeOut(){
   if(answered)return;answered=true;
   document.getElementById('qchoices').querySelectorAll('.choice-btn,.tf-btn').forEach(b=>b.disabled=true);
+  const ch=document.getElementById('qchoices');
+  const termName=ch._tfTermName||'';
+  if(sessionActive&&termName)sessionMistakes.push({term:termName,type:'timeout'});
   showFB(false,'⏱️ Temps écoulé !');updScore(false);
 }
-function handleC(btn,isOk,ca,expl){
+function handleC(btn,isOk,ca,expl,termName){
   if(answered)return;clearInterval(speedTimer);answered=true;
   btn.parentElement.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;if(b.textContent===ca)b.classList.add('correct');});
   if(!isOk)btn.classList.add('wrong');
-  if(quizMode==='boss'&&!isOk){showBossLost();return;}
+  if(sessionActive&&!isOk&&termName)sessionMistakes.push({term:termName,type:'choice',correct:ca});
+  if(quizMode==='boss'&&!isOk){showFB(false,expl);updScore(false);setTimeout(()=>endSession(true),1200);return;}
   showFB(isOk,expl);updScore(isOk);
 }
 function handleTF(btn,chosen){
   if(answered)return;clearInterval(speedTimer);answered=true;
   const ch=document.getElementById('qchoices');
-  const ans=ch._tfAnswer;const expl=ch._tfExpl||'';
+  const ans=ch._tfAnswer;const expl=ch._tfExpl||'';const termName=ch._tfTermName||'';
   const ok=chosen===ans;
   btn.parentElement.querySelectorAll('.tf-btn').forEach(b=>{b.disabled=true;const isV=b.classList.contains('vrai');if((isV&&ans)||(!isV&&!ans))b.classList.add('correct');});
   if(!ok)btn.classList.add('wrong');
-  if(quizMode==='boss'&&!ok){showBossLost();return;}
+  if(sessionActive&&!ok&&termName)sessionMistakes.push({term:termName,type:'tf',correct:ans?'VRAI':'FAUX'});
+  if(quizMode==='boss'&&!ok){showFB(false,expl);updScore(false);setTimeout(()=>endSession(true),1200);return;}
   showFB(ok,expl);updScore(ok);
 }
 function showFB(ok,expl){
@@ -472,7 +689,8 @@ function showFB(ok,expl){
   document.getElementById('btn-next').className='btn-next show';
 }
 function updScore(ok){
-  if(ok){correct++;streak++;if(streak>bestStreak)bestStreak=streak;}else{wrong++;streak=0;}
+  if(ok){correct++;streak++;bestStreak=Math.max(streak,bestStreak);if(sessionActive)sCorrect++;}
+  else{wrong++;streak=0;if(sessionActive)sWrong++;}
   document.getElementById('total-correct').textContent=correct;
   document.getElementById('total-wrong').textContent=wrong;
   const tot=correct+wrong;
@@ -481,32 +699,38 @@ function updScore(ok){
   document.getElementById('best-streak').textContent=bestStreak;
   saveProgress();
 }
-function nextQuestion(){qIdx++;renderQ();}
-function showEnd(){
+function nextQuestion(){qIdx++;saveSession();renderQ();}
+function endSession(bossLost=false){
   clearInterval(speedTimer);
-  document.getElementById('quiz-card').style.display='none';
-  const end=document.getElementById('quiz-end');end.classList.add('show');
-  const tot=correct+wrong||1;const pct=Math.round(correct/tot*100);
-  const emoji=pct>=85?'🏆':pct>=65?'🎉':pct>=45?'💪':'😅';
-  document.getElementById('end-emoji').textContent=emoji;
-  document.getElementById('end-title').textContent=pct>=85?'Excellent !':pct>=65?'Bien joué !':pct>=45?'Continue !':'On progresse !';
-  document.getElementById('end-score').innerHTML=`<span style="color:${pct>=65?'var(--good)':'var(--bad)'}">${pct}%</span>`;
-  document.getElementById('end-streak').textContent=`${correct} bonnes · Meilleur streak 🔥${bestStreak}`;
-}
-function showBossLost(){
-  clearInterval(speedTimer);
-  document.getElementById('quiz-card').style.display='none';
-  const end=document.getElementById('quiz-end');end.classList.add('show');
-  document.getElementById('end-emoji').textContent='💀';
-  document.getElementById('end-title').textContent='Le Boss t\'a battu !';
-  document.getElementById('end-score').innerHTML=`<span style="color:var(--bad)">${qIdx} / ${quizQueue.length}</span>`;
-  document.getElementById('end-streak').textContent=`Tombé à la question ${qIdx+1}. Réessaie !`;
-}
-function restartQuiz(){
-  buildQ();qIdx=0;correct=0;wrong=0;streak=0;answered=false;
-  document.getElementById('quiz-end').classList.remove('show');
-  document.getElementById('quiz-card').style.display='';
-  renderQ();
+  sessionActive=false;
+  localStorage.removeItem(SESSION_KEY);
+  const total=sCorrect+sWrong||1;
+  const pct=Math.round(sCorrect/total*100);
+  const xp=sCorrect*10+(pct===100?20:pct>=80?10:0);
+  const msg=pct>=90?'🏆 Parfait ! Tu maîtrises ce sujet !'
+           :pct>=70?'🎉 Excellent travail !'
+           :pct>=50?'💪 Continue, tu progresses !'
+           :'😅 Révise et réessaie — tu vas y arriver !';
+  document.getElementById('session-view').style.display='none';
+  document.getElementById('mode-select-view').style.display='none';
+  const endView=document.getElementById('end-view');endView.style.display='';
+  document.getElementById('end-content').innerHTML=`
+    <div style="text-align:center;padding:2rem;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.08);max-width:520px;margin:0 auto">
+      ${bossLost?'<div style="font-size:4rem">💀</div><h2 style="margin:.5rem 0;font-size:1.6rem">Le Boss t\'a battu !</h2>'
+        :`<div style="font-size:4rem">${pct>=90?'🏆':pct>=70?'🎉':pct>=50?'💪':'😅'}</div>
+         <h2 style="margin:.5rem 0;font-size:1.6rem">${pct>=90?'Parfait !':pct>=70?'Excellent !':pct>=50?'Continue !':'On progresse !'}</h2>`}
+      <div style="font-size:3rem;font-weight:900;color:${pct>=65?'var(--good)':'var(--bad)'};margin:1rem 0">${pct}%</div>
+      <div style="color:var(--muted);margin-bottom:1rem">${sCorrect} / ${sCorrect+sWrong} bonnes réponses</div>
+      <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-radius:12px;padding:.8rem 1.5rem;display:inline-block;font-weight:700;font-size:1.1rem;margin-bottom:1.5rem">+${xp} XP ✨</div>
+      ${sessionMistakes.length?`<div style="text-align:left;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:1rem;margin-bottom:1.5rem">
+        <div style="font-weight:700;margin-bottom:.5rem;color:var(--bad)">❌ À revoir (${sessionMistakes.length})</div>
+        ${sessionMistakes.map(m=>`<div style="padding:.3rem 0;font-size:.9rem">• <strong>${m.term}</strong>${m.correct?' → '+m.correct:''}</div>`).join('')}
+      </div>`:'<div style="color:var(--good);font-weight:700;margin-bottom:1.5rem">🎯 Aucune erreur !</div>'}
+      <div style="color:var(--muted);font-size:.9rem;margin-bottom:1.5rem">${msg}</div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <button class="btn-next show" onclick="showModeSelect()">🎲 Nouvelle session</button>
+      </div>
+    </div>`;
 }
 
 // ─────────────────────────────────────────
@@ -563,6 +787,7 @@ function showAnkiCard(){
     if(e.target.closest('.anki-actions'))return;
     flipAnki();
   };
+  applyDictionary(area);
 }
 
 function flipAnki(){
@@ -667,12 +892,20 @@ function renderHistorique(){
 // TABS
 // ─────────────────────────────────────────
 function showTab(tab){
+  if(sessionActive&&tab!=='quiz'){
+    pendingTab=tab;
+    document.getElementById('abandon-modal').classList.add('show');
+    return;
+  }
+  _doShowTab(tab);
+}
+function _doShowTab(tab){
   ['glossaire','quiz','anki','historique'].forEach(id=>{
     const el=document.getElementById('tab-'+id);
     if(el)el.style.display=(id===tab)?'':'none';
   });
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  if(tab==='quiz'&&quizQueue.length===0){buildQ();renderQ();}
+  if(tab==='quiz'&&!sessionActive){showModeSelect();}
   if(tab==='anki'){buildAnkiQueue();showAnkiCard();updateAnkiStats();}
   if(tab==='historique'){renderHistorique();}
 }
@@ -761,8 +994,4 @@ function showSync(msg){
 init();
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>initFirebase();</script>
-</body>
-</html>
+<script src="https://www.gstatic.com/firebasej
