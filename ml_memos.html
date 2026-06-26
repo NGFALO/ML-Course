@@ -185,10 +185,18 @@
   .modal-overlay.show{display:flex;}
   .modal-box{background:white;border-radius:20px;padding:2rem;max-width:360px;width:90%;text-align:center;animation:fadeIn .2s;}
   @media(max-width:600px){.mode-select-grid{grid-template-columns:1fr;}.session-header{padding:.6rem 1rem;gap:.5rem;}.session-end{padding:1.5rem 1rem;margin:1rem;}}
-  /* ── DICTIONARY ── */
-  .dict-word{border-bottom:1.5px dotted #6366f1;cursor:pointer;color:inherit;}
-  .dict-word:hover{background:var(--eval-light);border-radius:2px;}
-  .dict-tooltip{position:fixed;background:#1a1a2e;color:white;padding:.65rem .95rem;border-radius:10px;font-size:.82rem;max-width:230px;z-index:10000;box-shadow:0 4px 20px rgba(0,0,0,.3);line-height:1.5;pointer-events:none;}
+  /* ── DICTIONARY PANEL ── */
+  .dict-btn{position:absolute;top:.9rem;right:.9rem;width:30px;height:30px;border-radius:50%;border:2px solid #6366f1;background:white;color:#6366f1;font-weight:900;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10;transition:background .15s;}
+  .dict-btn:hover{background:var(--eval-light);}
+  .dict-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:flex;align-items:center;justify-content:center;}
+  .dict-panel{background:white;border-radius:18px;padding:1.4rem 1.5rem;max-width:380px;width:92%;max-height:72vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;z-index:9999;}
+  .dict-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+  .dict-panel-title{font-weight:800;font-size:1rem;}
+  .dict-panel-close{border:none;background:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1;padding:0;}
+  .dict-entry{border-bottom:1px solid var(--border);padding:.7rem 0;}
+  .dict-entry:last-child{border-bottom:none;}
+  .dict-entry-word{font-weight:700;font-size:.9rem;color:#6366f1;margin-bottom:.2rem;}
+  .dict-entry-def{font-size:.83rem;color:var(--muted);line-height:1.45;}
 </style>
 </head>
 <body>
@@ -258,7 +266,8 @@
     <div id="speed-bar-wrap" class="speed-bar-wrap" style="display:none;max-width:700px;margin:.5rem auto 0;"><div id="speed-bar" class="speed-bar" style="width:100%;background:var(--good)"></div></div>
     <main>
       <div id="quiz-area">
-        <div class="quiz-card" id="quiz-card">
+        <div class="quiz-card" id="quiz-card" style="position:relative">
+          <button class="dict-btn" onclick="showDictPanel(document.getElementById('quiz-card'))" title="Vocabulaire de la question">?</button>
           <div class="quiz-family-badge" id="qfamily"></div>
           <div class="quiz-type-label" id="qtype-label"></div>
           <div class="quiz-question" id="qquestion"></div>
@@ -398,9 +407,7 @@ function renderCards(){
   if(!TERMS.length){document.getElementById('cards-grid').innerHTML='<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">⏳ Chargement des termes...</p>';return;}
   const q=currentSearch.toLowerCase();
   const v=TERMS.filter(t=>(currentFilter==='all'||t.family===currentFilter)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||t.id.includes(q)||(t.d2t||'').toLowerCase().includes(q)));
-  const cg=document.getElementById('cards-grid');
-  cg.innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';
-  applyDictionary(cg);
+  document.getElementById('cards-grid').innerHTML=v.length?v.map(buildCard).join(''):'<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:2rem">Aucun terme trouvé.</p>';
 }
 function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderCards();}
 function filterCards(){currentSearch=document.getElementById('search').value;renderCards();}
@@ -510,11 +517,9 @@ function doAbandon(){
 }
 
 // ─────────────────────────────────────────
-// DICTIONARY / TOOLTIPS
+// DICTIONARY PANEL
 // ─────────────────────────────────────────
 let DICTIONARY={};
-let _dictRegex=null;
-let _dictTip=null;
 
 async function loadDictionary(){
   try{
@@ -524,58 +529,35 @@ async function loadDictionary(){
     rows.forEach(row=>{
       if(row.word&&row.definition)DICTIONARY[row.word.toLowerCase()]={word:row.word,def:row.definition};
     });
-    const keys=Object.keys(DICTIONARY).sort((a,b)=>b.length-a.length);
-    if(keys.length)_dictRegex=new RegExp('\\b('+keys.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
   }catch(e){console.warn('Dictionary tab not found — skipping:',e);}
 }
-function applyDictionary(el){
-  if(!_dictRegex||!el)return;
-  _dictRegex.lastIndex=0;
-  _walkDictNodes(el);
+
+function showDictPanel(containerEl){
+  hideDictPanel();
+  const text=(containerEl||document.body).textContent||'';
+  const found=[];const seen=new Set();
+  Object.entries(DICTIONARY).forEach(([key,entry])=>{
+    if(seen.has(key))return;
+    const re=new RegExp('\\b'+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
+    if(re.test(text)){seen.add(key);found.push(entry);}
+  });
+  const overlay=document.createElement('div');
+  overlay.id='dict-overlay';
+  overlay.className='dict-panel-overlay';
+  overlay.onclick=hideDictPanel;
+  const panel=document.createElement('div');
+  panel.className='dict-panel';
+  panel.onclick=e=>e.stopPropagation();
+  const body=found.length
+    ?found.map(e=>`<div class="dict-entry"><div class="dict-entry-word">${e.word}</div><div class="dict-entry-def">${e.def}</div></div>`).join('')
+    :`<div style="color:var(--muted);font-size:.88rem;text-align:center;padding:1rem 0">Aucun terme du dictionnaire<br>dans cette question.</div>`;
+  panel.innerHTML=`<div class="dict-panel-head"><span class="dict-panel-title">📖 Vocabulaire${found.length?' ('+found.length+')':''}</span><button class="dict-panel-close" onclick="hideDictPanel()">✕</button></div>${body}`;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
 }
-function _walkDictNodes(el){
-  if(el.nodeType===3){
-    const text=el.textContent;
-    _dictRegex.lastIndex=0;
-    if(!_dictRegex.test(text)){_dictRegex.lastIndex=0;return;}
-    _dictRegex.lastIndex=0;
-    const frag=document.createDocumentFragment();
-    let last=0,m;
-    while((m=_dictRegex.exec(text))!==null){
-      if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)));
-      const sp=document.createElement('span');
-      sp.className='dict-word';
-      sp.textContent=m[0];
-      sp.dataset.dk=m[0].toLowerCase();
-      frag.appendChild(sp);
-      last=m.index+m[0].length;
-    }
-    if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));
-    el.parentNode.replaceChild(frag,el);
-    return;
-  }
-  if(el.nodeType===1&&!['SCRIPT','STYLE','INPUT','TEXTAREA','BUTTON'].includes(el.tagName)&&!el.classList.contains('dict-word')){
-    [...el.childNodes].forEach(_walkDictNodes);
-  }
+function hideDictPanel(){
+  const o=document.getElementById('dict-overlay');if(o)o.remove();
 }
-document.addEventListener('click',e=>{
-  if(e.target.classList.contains('dict-word')){
-    const entry=DICTIONARY[e.target.dataset.dk];
-    if(!entry)return;
-    if(_dictTip){_dictTip.remove();_dictTip=null;}
-    const tt=document.createElement('div');
-    tt.className='dict-tooltip';
-    tt.innerHTML=`<strong>${entry.word}</strong><br><span style="opacity:.85">${entry.def}</span>`;
-    document.body.appendChild(tt);
-    _dictTip=tt;
-    const r=e.target.getBoundingClientRect();
-    tt.style.left=Math.min(r.left,window.innerWidth-245)+'px';
-    tt.style.top=(r.bottom+6)+'px';
-    e.stopPropagation();
-  } else {
-    if(_dictTip){_dictTip.remove();_dictTip=null;}
-  }
-});
 
 function buildQ(){
   const m=MODES.find(x=>x.id===quizMode);
@@ -652,7 +634,6 @@ function renderQ(){
     ch.innerHTML=`<div class="tf-choices"><button class="tf-btn vrai" onclick="handleTF(this,true)">✅ VRAI</button><button class="tf-btn faux" onclick="handleTF(this,false)">❌ FAUX</button></div>`;
     ch._tfAnswer=ans;ch._tfExpl=expl;ch._tfTermName=t.name;
   }
-  applyDictionary(document.getElementById('qquestion'));
 }
 
 function timeOut(){
@@ -762,7 +743,8 @@ function showAnkiCard(){
   const mastered=(s.correct||0)>=5;
   const pips=[...Array(5)].map((_,i)=>`<span style="width:12px;height:12px;border-radius:50%;display:inline-block;margin:0 2px;background:${i<(s.correct||0)?'var(--good)':'var(--border)'};transition:background .3s"></span>`).join('');
   area.innerHTML=`
-    <div class="anki-card" id="anki-card">
+    <div class="anki-card" id="anki-card" style="position:relative">
+      <button class="dict-btn" onclick="showDictPanel(document.getElementById('anki-card'))" title="Vocabulaire de la carte">?</button>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
         <div class="anki-progress-dots">${pips}${mastered?' <span class="good-badge" style="font-size:.65rem;margin-left:8px">⭐ Maîtrisé</span>':''}</div>
         <div class="anki-counter">${ankiIdx+1} / ${ankiQueue.length}</div>
@@ -784,10 +766,9 @@ function showAnkiCard(){
     </div>`;
   document.getElementById('anki-card').onclick=function(e){
     if(ankiFlipped)return;
-    if(e.target.closest('.anki-actions'))return;
+    if(e.target.closest('.anki-actions')||e.target.closest('.dict-btn'))return;
     flipAnki();
   };
-  applyDictionary(area);
 }
 
 function flipAnki(){
