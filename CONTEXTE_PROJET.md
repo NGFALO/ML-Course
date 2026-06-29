@@ -1,6 +1,6 @@
 # 🧠 ML Mémos — Contexte Projet (pour Claude)
 
-> Colle ce fichier dans le dossier de projet et dis à Claude : "Lis CONTEXTE_PROJET.md et reprends le projet."
+> Lis ce fichier puis `ml_memos.html` et tu es opérationnel.
 
 ---
 
@@ -22,35 +22,51 @@
 - Chemin local : `C:\Users\falo-\Documents\GitRepos\ML-Course\ml_memos.html`
 - URL GitHub Pages : `https://ngfalo.github.io/ML-Course/ml_memos.html`
 - Repo GitHub : `github.com/ngfalo/ML-Course`
-- Taille actuelle : ~763 lignes, ~47KB (données externalisées dans Google Sheets)
+- Taille actuelle : ~850 lignes (redesign v2 complet)
+- Version actuelle : **v2.4**
 
 ---
 
 ## 🏗️ Architecture technique
 
-### Structure du fichier HTML
-```
-lignes 1–268     : <!DOCTYPE> + <style> CSS complet + HTML structure (header, nav, 4 tabs)
-lignes 269–762   : <script> — tout le JS (data loader + logique + Firebase)
-lignes 763–768   : Firebase Compat CDN scripts + initFirebase()
-```
-
 ### Règles techniques IMPORTANTES
 - **PAS de `type="module"`** sur le script principal — ça casse les `onclick=""` inline
 - **Firebase Compat SDK** (pas ESM) — chargé via `<script src>` séparés APRÈS le script principal
-- Pour écrire le fichier : utiliser `mcp__workspace__bash` avec Python ou `cat >` (le Write tool peut écrire directement dans ce dossier)
-- **Les données (TERMS) ne sont plus dans le HTML** — elles sont dans Google Sheets
+- **Objet global `APP`** — tous les handlers onclick appellent `APP.methode()`
+- **État global `S`** — objet unique contenant tout l'état (tab, quiz, anki, stats, user…)
+- **`render()`** — reconstruit `#content` innerHTML selon `S.tab`
+- **Les données (TERMS) ne sont pas dans le HTML** — elles viennent de Google Sheets
+
+### Structure du fichier HTML
+```
+<head>       : meta + Google Fonts (Baloo 2, Hanken Grotesk) + CSS + theme-init script
+<body>       : .app-bg > .app-col > #top-bar + #content + #bottom-nav + #abandon-modal
+<script>     : constantes → état → helpers → Valkyrie SVG → data loader → Firebase
+               → render helpers (home/gloss/quiz/anki/profil) → render() → APP object → init()
+fin <body>   : Firebase Compat CDN scripts + initFirebase() + init()
+```
+
+### Design system (redesign v2)
+- **Palette** : fond crème `--bg:#E9E4DB`, cartes blanches, dark mode via `data-theme="dark"` sur `<html>`
+- **Polices** : Baloo 2 (titres/chiffres) + Hanken Grotesk (corps)
+- **Layout** : colonne 480px max, centré desktop avec border-radius 32px + ombre
+- **Top bar** : chips 🔥 streak / ⭐ XP / 🎯 mastery% + toggle thème + auth Google
+- **Bottom nav** : 5 onglets — Accueil 🏠 · Glossaire 📖 · Quiz 🎯 · Révision 🃏 · Profil 📈
+- **Valkyrie mascot** : SVG inline via `vkSVG(mood, w, h)` — moods: happy/wow/oops/idle
+- **Favicon** : Valkyrie simplifiée inline en data URI SVG dans `<link rel="icon">`
+- **localStorage keys** : `mlmemos_theme`, `mlmemos_v2`, `mlmemos_session_v1`, `mlmemos_terms_cache_v1`
 
 ### Google Sheets — Source des données
-- **URL de base** : `https://docs.google.com/spreadsheets/d/e/2PACX-1vTYMHIf-bdjE8v1BzY6X4GI-X0UjsohSAbyp3-x0Uj2KtC0IkbOYKw8kQqTEOtwzfHrdDiJwFUlkw4J/pub?output=csv&sheet=`
-- **4 onglets** :
+- **URL pub** : `https://docs.google.com/spreadsheets/d/e/2PACX-1vTYMHIf-bdjE8v1BzY6X4GI-X0UjsohSAbyp3-x0Uj2KtC0IkbOYKw8kQqTEOtwzfHrdDiJwFUlkw4J/pub?output=csv`
+- **Fetch stratégie** : `Promise.any([name-URL, GID-URL])` pour chaque onglet — couvre les deux modes de publication Google
+- **GIDs** : Terms=`2111289426`, Rules=`378027362`, Scenarios=`1767817621`, TrueFalse=`1007638947`
+- **Onglets** :
   - `Terms` — id, name, full, family, image, tip, d2t, t2d_correct, t2d_wrong1/2/3
   - `Rules` — term_id, val, label, type
-  - `Scenarios` — term_id, question, correct_choice, wrong1/2/3, explanation
   - `TrueFalse` — term_id, statement, answer (TRUE/FALSE), explanation
-- **Édition** : ouvrir le Google Sheet et modifier directement → le site se met à jour au prochain chargement
-- **Ajout de terme** : ajouter une ligne dans `Terms` + lignes dans `Rules`/`Scenarios`/`TrueFalse`
-- Pour que Claude vérifie ou modifie du contenu : donner l'URL `?output=csv&sheet=NomOnglet`
+  - `Dictionary` — word, definition (chargé en background, enrichit DICT)
+  - `Scenarios` — **obsolète** (données malformées, le mode Scénario ne l'utilise plus)
+- **Cache** : `mlmemos_terms_cache_v1` en localStorage — hydrate instantanément au reload
 
 ### Firebase
 ```js
@@ -63,115 +79,118 @@ const FIREBASE_CONFIG = {
   appId: "1:1050580397485:web:04f892ec7afc7c4ed58524"
 };
 ```
-- Collection : `progress`, doc : `user.uid` (UID Firebase Auth — identique sur tous les appareils)
-- **Auth : Google Sign-In** — `firebase.auth().signInWithPopup(GoogleAuthProvider)` + `onAuthStateChanged`
-- SDK chargés : `firebase-app-compat.js`, `firebase-auth-compat.js`, `firebase-firestore-compat.js`
-- Domaine autorisé : `ngfalo.github.io` (Firebase Console → Authentication → Authorized domains)
-- Google Sign-In activé : Firebase Console → Authentication → Sign-in method → Google
+- Collection : `progress`, doc : `user.uid`
+- **Auth : Google Sign-In** avec `prompt:'select_account'` (force le sélecteur de compte)
+- SDK : `firebase-app-compat.js`, `firebase-auth-compat.js`, `firebase-firestore-compat.js`
+- **Règles Firestore** (à jour) : `allow read, write: if request.auth.uid == userId` — chaque user ne voit que ses données
+- Sign-out : vide `S.stats` + `render()` pour effacer les données de l'ancien compte
 
 ---
 
 ## 🎯 Fonctionnalités implémentées
 
-### Onglet 📚 Glossaire
+### Onglet 🏠 Accueil
+- Carte salutation + Valkyrie animée (mood selon objectif du jour atteint ou non)
+- Ring SVG : progression objectif du jour (DAILY_GOAL = 12 questions)
+- CTA "Commencer/Continuer la session" + raccourci Révision du jour
+- Grille des 6 domaines avec barre de maîtrise par famille
+
+### Onglet 📖 Glossaire
 - Termes ML en 6 familles : `eval`, `model`, `classif`, `summary`, `libs`, `choose`
-- Filtrage par famille + recherche texte
-- Chaque carte : image mentale, seuils (good/warn/bad), tip
-- Badge ⭐ "Maîtrisé" visible si 5 bonnes réponses Anki
+- Filtrage par famille + recherche texte **sans perte de focus** (seul `#gloss-cards` est re-rendu, pas tout le tab)
+- Chaque carte : image mentale, seuils (good/warn/bad), tip, badge ⭐ si maîtrisé
 
-### Onglet 🎯 Quiz — Système de sessions (style Duolingo)
-- **Écran de sélection de mode** (`mode-select-view`) : grille de 7 modes
-- **Modes** : Mixte (10q), Scénario (10q), Vrai/Faux (10q), Terme→Déf (10q), Déf→Terme (10q), ⚡ Speed Round (15q, 15s/q), 💀 Boss Battle (20q, 1 erreur = game over)
-- **Session immersive** (`session-view`) : header avec bouton Quitter, barre de progression, compteur
-- **Navigation lockée** : changer d'onglet pendant une session déclenche modal d'abandon
-- **Sauvegarde auto** : `localStorage` key `ml_quiz_session`, TTL 30 min — reprise au rechargement
-- **Écran de fin** (`end-view`) : score %, XP (+10/bonne, +20 si 100%, +10 si ≥80%), liste des erreurs, message motivant
-- **Fonctions clés** : `showModeSelect()`, `launchSession(mode)`, `showSessionView()`, `endSession(bossLost)`, `saveSession()`, `resumeSession()`, `confirmAbandon()`, `doAbandon()`
-- **Compteurs session** : `sCorrect`, `sWrong`, `sessionMistakes[]` (séparés des compteurs globaux)
-- Explication affichée après chaque réponse via `showFB()`
+### Onglet 🎯 Quiz
+- **7 modes** : Mixte · Scénario · Vrai/Faux · Terme→Déf · Déf→Terme · ⚡ Speed (15s/q) · 💀 Boss (1 vie)
+- **Mode Scénario** : affiche `term.image` comme question, 4 choix = noms de termes (1 correct + 3 aléatoires) — **ne dépend plus de l'onglet Scenarios**
+- **Sessions** : sauvegarde auto `mlmemos_session_v1` TTL 30min, reprise au rechargement
+- **Navigation lockée** : modal d'abandon si on quitte pendant une session
+- **Fin de session** : score %, XP (+10/bonne, +20 si 100%, +10 si ≥80%), liste des erreurs
+- **Dictionnaire inline** : bouton `?` → panel avec les termes ML détectés dans la question courante
 
-### Onglet 🃏 Anki
-- Répétition espacée (SRS) : intervalles 1j, 2j, 4j, 7j, 14j
-- Clic sur carte = révèle image mentale + tip
-- "✅ Je savais" / "❌ Je ne savais pas"
-- 5 bonnes réponses consécutives = ⭐ Maîtrisé
-- Cartes maîtrisées reviennent 1× sur 5
-- Erreur : carte revient dans 5 minutes
+### Onglet 🃏 Révision (Anki)
+- Répétition espacée SRS : intervalles 1j · 2j · 4j · 7j · 14j
+- Clic = révèle image mentale + tip
+- "✅ Je savais" / "❌ À revoir" — erreur repasse dans 5 minutes
+- 5 ✓ consécutives = ⭐ Maîtrisé (revient 1× sur 5 dans la queue)
 
-### Onglet 📈 Historique
-- Stats globales : maîtrisés / vus / nouveaux
-- Barre de progression globale
-- Liste tous les termes triés par maîtrise (pips verts)
+### Onglet 📈 Profil (remplace Historique)
+- Carte niveau (XP/100 par niveau) + barre maîtrise globale
+- Stats : bonnes/mauvaises réponses totales
+- Tableau de tous les termes triés par maîtrise (pips colorés)
 
 ### Sync Firebase
-- `saveProgress()` : debounce 800ms, sauvegarde `{correct, wrong, bestStreak, cardStats, updatedAt}`
-- `loadProgress()` : appelé au démarrage, restaure tout l'état
-- `showSync()` : message discret "☁️ Sauvegardé" / "⚠️ Hors ligne"
-- **Sync cross-device** : fonctionne via Google Sign-In (même UID sur tous les appareils)
+- `saveAll()` : debounce 800ms → Firestore + localStorage
+- `loadCloud()` : au login, charge la progression du compte
+- `flashSync()` : message discret "☁️ Sauvegardé" / "⚠️ Sync échouée"
+- Sign-out : reset `S.stats` + re-render immédiat
+
+### XP & Streak
+- `bumpDaily(gotXp)` : appelé après chaque réponse — met à jour streak, todayCount, XP
+- Streak : incrémente si lastActive = hier, reset à 1 sinon
+- XP : +10 par bonne réponse + bonus de fin de session
 
 ---
 
-## 📊 Structure d'un terme (Google Sheets → TERMS array)
-
-Le JS reconstruit automatiquement cette structure depuis les 4 onglets Sheets :
+## 📊 Structure d'un terme (TERMS array)
 
 ```js
 {
-  id: 'r2',                    // identifiant unique (onglet Terms)
-  name: 'R²',                  // nom affiché
+  id: 'r2',
+  name: 'R²',
   full: 'Coefficient de Détermination',
-  family: 'eval',              // eval | model | classif | summary | libs | choose
-  image: '🎯 "..." ...',       // image mentale
+  family: 'eval',           // eval | model | classif | summary | libs | choose
+  image: '🎯 ...',          // image mentale — utilisée comme question en mode Scénario
   tip: 'Astuce...',
-  d2t: 'Définition...',        // question mode Def→Terme
-  t2d: ['bonne réponse', 'mauvais1', 'mauvais2', 'mauvais3'],  // index 0 = correct
-  rules: [                     // onglet Rules
-    {val:'≥ 0.90', label:'Excellent ✅', type:'good'}  // good | warn | bad
-  ],
-  scenarios: [                 // onglet Scenarios
-    {q:'Question?', choice:'bonne réponse', wrongs:['a','b','c'], answer:'explication'}
-  ],
-  tf: [                        // onglet TrueFalse
-    {stmt:'Affirmation...', answer:true, explain:'Explication...'}
-  ]
+  d2t: 'Définition...',     // question mode Déf→Terme
+  t2d: ['correct', 'w1', 'w2', 'w3'],  // index 0 = correct
+  rules: [{val, label, type}],          // good | warn | bad
+  tf: [{stmt, answer:bool, explain}],   // Vrai/Faux
+  scenarios: [...],                     // obsolète, non utilisé
 }
 ```
 
----
-
-## 🔜 Prochaine fonctionnalité — Dictionnaire / Tooltips
-
-- Nouveau onglet Google Sheets : `Dictionary` — colonnes `word`, `definition`
-- Les mots ML utiles dans l'app sont **soulignés** (ex: ROC, AUC, feature, Modèle, régularisation…)
-- Cliquer sur un mot souligné → popup tooltip avec définition brève
-- Claude juge quels mots sont "utiles ML" (pas les mots basiques ou UI)
-- À implémenter : charger `Dictionary` depuis Sheets, scanner le texte affiché, wrapper les mots dans `<span class="dict-word" data-word="ROC">ROC</span>`, tooltip CSS/JS
+### Types de questions dans `makeCur()`
+| type  | question              | choices                        |
+|-------|-----------------------|--------------------------------|
+| `t2d` | "Que signifie X ?"    | t2d array (1 correct + 3 wrong)|
+| `d2t` | d2t text              | 4 noms de termes               |
+| `img` | term.image (scénario) | 4 noms de termes               |
+| `tf`  | tf.stmt               | VRAI / FAUX                    |
 
 ---
 
-## 🐛 Bugs corrigés (important à ne pas réintroduire)
+## 🐛 Bugs corrigés importants
 
-**Bug 1** : Dans `buildQ()`, le code utilisait `qs.push({type:'sc', term:t, s})` (raccourci JS qui créait la propriété `s` au lieu de `sc`), ce qui faisait que `renderQ()` ne pouvait pas lire `q.sc.q` → aucun choix affiché en mode Scénario.
-**Fix** : `qs.push({type:'sc', term:t, sc:sc})` — toujours écrire explicitement `sc:sc`.
-
-**Bug 2** : L'ancien `getUserId()` générait un ID aléatoire stocké en `localStorage` → chaque appareil avait son propre doc Firebase → zéro sync cross-device.
-**Fix** : Google Sign-In — l'UID Firebase est identique sur tous les appareils.
+- **Quiz ne se lance pas** : `loadTerms()` fetchait le mauvais onglet (GID Terms ≠ premier onglet). Fix : `Promise.any([name-URL, GID-URL])` pour tous les onglets.
+- **Scénarios vides** : données malformées dans l'onglet Scenarios. Fix : mode Scénario utilise désormais `type:'img'` (image mentale → identifier le terme).
+- **Recherche glossaire perd le focus** : `render()` complet détruisait l'input. Fix : `setGSearch` ne re-rend que `#gloss-cards`.
+- **Sign-out sans refresh** : `onAuthStateChanged` ne re-rendait pas. Fix : reset `S.stats` + `render()` sur user=null.
+- **Connexion sans sélecteur de compte** : Fix : `prompt:'select_account'` dans GoogleAuthProvider.
+- **Navigation lockée cassée** : `APP.showAbandon()` → `APP.confirmAbandon()` (typo).
 
 ---
 
-## 📝 Décisions de design prises
+## 📝 Décisions de design
 
 - **Single-file HTML** : tout dans un seul fichier, pas de framework
-- **Firebase Compat** : choisi car ESM casse les `onclick=""` inline
-- **Google Sheets** : source des données éditable sans toucher au HTML
-- **GitHub Pages** : hébergement gratuit, URL simple
-- **Pas de VPS** : Falo n'a pas les compétences pour le gérer
-- **Style** : colorful mais clean, family-pills colorées par catégorie
-- **Gamification** : streak + "le moins d'erreurs possible" (pas de points complexes)
+- **Firebase Compat SDK** : choisi car ESM casse les `onclick=""` inline
+- **Google Sheets** : source de données éditable sans toucher au HTML
+- **Pas d'onglet Scenarios** : données trop difficiles à maintenir proprement — le mode Scénario génère les questions depuis `term.image` dynamiquement
+- **Pas de PWA pour l'instant** : idée notée — PWA + pwabuilder.com pour APK Android plus tard
+- **Rendu innerHTML** : pas de framework, `render()` reconstruit le tab courant complet (sauf glossaire search)
 
 ---
 
-## 🚀 Pour déployer une nouvelle version sur GitHub
+## 🔐 Sécurité
+
+- **Firestore rules** : `allow read, write: if request.auth != null && request.auth.uid == userId` — chaque user ne voit que ses données ✅
+- **Firebase API key publique** : normal pour le client-side, pas un risque si les rules sont correctes
+- **Repo public GitHub** : aucun secret réel — la clé Firebase est conçue pour être publique
+
+---
+
+## 🚀 Déployer une nouvelle version
 
 ```bash
 git add ml_memos.html
@@ -179,16 +198,11 @@ git commit -m "description du changement"
 git push
 ```
 
-Ou via GitHub web : `github.com/ngfalo/ML-Course` → `ml_memos.html` → ✏️ → coller → Commit
-
 ---
 
 ## 💬 Comment reprendre avec Claude
 
-Dis simplement :
-> *"Lis CONTEXTE_PROJET.md et reprends le projet. Je veux [ajouter X / corriger Y / etc.]"*
+> *"Lis CONTEXTE_PROJET.md et reprends le projet."*
 
-Pour modifier du **contenu** (termes, quiz, phrases) :
+Pour modifier du **contenu** (termes, quiz) :
 > *"Lis le Google Sheet [URL] et [modifie / ajoute / vérifie] ..."*
-
-Claude lira ce fichier + le fichier HTML et sera immédiatement opérationnel.
