@@ -140,7 +140,7 @@ body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--bg);colo
   </div>
 
   <!-- VERSION -->
-  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.2</div>
+  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.3</div>
 
   <!-- ABANDON MODAL -->
   <div id="abandon-modal" style="display:none;"></div>
@@ -461,17 +461,27 @@ function makeCur(queue,idx){
   const base={term:t,type:it.type,fam:t.family,famLabel:fi.label+' · '+t.name};
   if(it.type==='t2d'){const correct=t.t2d[0];return Object.assign(base,{typeLabel:'📖 Terme → Définition',question:`Que signifie « ${t.name} » (${t.full}) ?`,choices:shuf([...t.t2d]),correct,explain:t.image+(t.tip?'  💡 '+t.tip:'')});}
   if(it.type==='d2t'){const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);return Object.assign(base,{typeLabel:'🔍 Définition → Terme',question:t.d2t,choices:shuf([t.name,...others]),correct:t.name,explain:t.image});}
-  if(it.type==='sc'){return Object.assign(base,{typeLabel:'🎬 Scénario réel',question:it.sc.q,choices:shuf([it.sc.choice,...it.sc.wrongs]),correct:it.sc.choice,explain:it.sc.answer});}
+  if(it.type==='img'){
+    // Image mentale → identifier le terme. 3 noms aléatoires d'autres termes.
+    const others=shuf(TERMS.filter(x=>x.id!==t.id)).slice(0,3).map(x=>x.name);
+    return Object.assign(base,{typeLabel:'🎬 Scénario réel',question:t.image,choices:shuf([t.name,...others]),correct:t.name,explain:t.full+(t.tip?'  💡 '+t.tip:'')});
+  }
   return Object.assign(base,{typeLabel:'✅ Vrai ou Faux ?',question:'« '+it.tf.stmt+' »',isTF:true,correctBool:it.tf.answer,explain:it.tf.explain||''});
 }
 function buildQueue(mode){
   const md=MODES.find(x=>x.id===mode)||MODES[0];const n=md.n;let qs=[];
   if(mode==='speed'){TERMS.forEach(t=>{if(t.t2d&&t.t2d.length)qs.push({type:'t2d',term:t});});return shuf(qs).slice(0,n);}
-  if(mode==='boss'){TERMS.forEach(t=>{(t.scenarios||[]).forEach(sc=>qs.push({type:'sc',term:t,sc}));(t.tf||[]).forEach(tf=>qs.push({type:'tf',term:t,tf}));});return shuf(qs).slice(0,n);}
+  if(mode==='boss'){
+    TERMS.forEach(t=>{
+      if(t.image)qs.push({type:'img',term:t});        // image→term
+      (t.tf||[]).forEach(tf=>qs.push({type:'tf',term:t,tf}));
+    });
+    return shuf(qs).slice(0,n);
+  }
   TERMS.forEach(t=>{
     if(t.t2d&&t.t2d.length&&(mode==='all'||mode==='term2def'))qs.push({type:'t2d',term:t});
     if(t.d2t&&(mode==='all'||mode==='def2term'))qs.push({type:'d2t',term:t});
-    (t.scenarios||[]).forEach(sc=>{if(mode==='all'||mode==='scenario')qs.push({type:'sc',term:t,sc});});
+    if(t.image&&(mode==='all'||mode==='scenario'))qs.push({type:'img',term:t}); // image→term
     (t.tf||[]).forEach(tf=>{if(mode==='all'||mode==='tf')qs.push({type:'tf',term:t,tf});});
   });
   return shuf(qs).slice(0,n);
