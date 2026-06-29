@@ -141,7 +141,7 @@ body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--bg);colo
   </div>
 
   <!-- VERSION -->
-  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.3</div>
+  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.4</div>
 
   <!-- ABANDON MODAL -->
   <div id="abandon-modal" style="display:none;"></div>
@@ -403,6 +403,9 @@ function initFirebase(){
           flashSync('🔑 '+(user.displayName||user.email||'').split(' ')[0]);
         } else {
           _docRef=null;
+          // Vide les stats de l'ancien compte + re-render
+          S.stats={correct:0,wrong:0,bestStreak:0,cardStats:{},meta:{dayStreak:0,lastActive:'',todayDate:'',todayCount:0,xp:0}};
+          render();
         }
       });
     }catch(e){flashSync('⚠️ Hors ligne');}
@@ -903,7 +906,13 @@ const APP={
     try{localStorage.setItem('mlmemos_theme',next);}catch(e){}
     render();
   },
-  signIn(){try{firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){flashSync('⚠️ Connexion impossible');}},
+  signIn(){
+    try{
+      const p=new firebase.auth.GoogleAuthProvider();
+      p.setCustomParameters({prompt:'select_account'}); // force le sélecteur de compte
+      firebase.auth().signInWithPopup(p);
+    }catch(e){flashSync('⚠️ Connexion impossible');}
+  },
   signOut(){
     const m=document.getElementById('abandon-modal');
     m.style.display='';
