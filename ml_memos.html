@@ -140,7 +140,7 @@ body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--bg);colo
   </div>
 
   <!-- VERSION -->
-  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.1</div>
+  <div style="text-align:center;padding:3px 0 5px;font:500 9px 'Hanken Grotesk',sans-serif;color:var(--ink-3);opacity:.4;letter-spacing:.4px;flex-shrink:0;">v2.2</div>
 
   <!-- ABANDON MODAL -->
   <div id="abandon-modal" style="display:none;"></div>
@@ -163,6 +163,7 @@ const FIREBASE_CONFIG={
 
 const SHEET_PUB='https://docs.google.com/spreadsheets/d/e/2PACX-1vTYMHIf-bdjE8v1BzY6X4GI-X0UjsohSAbyp3-x0Uj2KtC0IkbOYKw8kQqTEOtwzfHrdDiJwFUlkw4J/pub?output=csv';
 const SHEET_BASE=SHEET_PUB+'&gid=';
+const SHEET_NAME=SHEET_PUB+'&sheet=';  // name-based: works when sheet is published as "current sheet only"
 const SHEET_GIDS={Terms:'2111289426',Rules:'378027362',Scenarios:'1767817621',TrueFalse:'1007638947'};
 const DICT_URL=SHEET_PUB+'&sheet=Dictionary';
 const CACHE_KEY='mlmemos_terms_cache_v1';
@@ -292,12 +293,16 @@ function buildTerms(tR,rR,sR,fR){
 async function loadTerms(){
   let cached=null;
   try{const raw=localStorage.getItem(CACHE_KEY);if(raw){const o=JSON.parse(raw);if(o&&o.terms&&o.terms.length)cached=o;}}catch(e){}
+  // Strategy: try name-based URL first (works with "current sheet" publish),
+  // fall back to GID (requires "entire document" publish). Both tried in parallel via race.
+  function fetchTab(name, gid){
+    return Promise.any([fetchCSV(SHEET_NAME+name), fetchCSV(SHEET_BASE+gid)]);
+  }
   const res=await Promise.allSettled([
-    // Use GID for Terms (more reliable than default tab when Terms isn't the first tab)
-    fetchCSV(SHEET_BASE+SHEET_GIDS.Terms).catch(()=>fetchCSV(SHEET_PUB)),
-    fetchCSV(SHEET_BASE+SHEET_GIDS.Rules),
-    fetchCSV(SHEET_BASE+SHEET_GIDS.Scenarios),
-    fetchCSV(SHEET_BASE+SHEET_GIDS.TrueFalse),
+    fetchTab('Terms', SHEET_GIDS.Terms),
+    fetchTab('Rules', SHEET_GIDS.Rules),
+    fetchTab('Scenarios', SHEET_GIDS.Scenarios),
+    fetchTab('TrueFalse', SHEET_GIDS.TrueFalse),
   ]);
   const [tR,rR,sR,fR]=res.map(x=>x.status==='fulfilled'?x.value:'');
   const missing=['Rules','Scenarios','TrueFalse'].filter((n,i)=>![rR,sR,fR][i]);
