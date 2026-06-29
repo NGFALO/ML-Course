@@ -290,7 +290,8 @@ async function loadTerms(){
   let cached=null;
   try{const raw=localStorage.getItem(CACHE_KEY);if(raw){const o=JSON.parse(raw);if(o&&o.terms&&o.terms.length)cached=o;}}catch(e){}
   const res=await Promise.allSettled([
-    fetchCSV(SHEET_PUB),
+    // Use GID for Terms (more reliable than default tab when Terms isn't the first tab)
+    fetchCSV(SHEET_BASE+SHEET_GIDS.Terms).catch(()=>fetchCSV(SHEET_PUB)),
     fetchCSV(SHEET_BASE+SHEET_GIDS.Rules),
     fetchCSV(SHEET_BASE+SHEET_GIDS.Scenarios),
     fetchCSV(SHEET_BASE+SHEET_GIDS.TrueFalse),
@@ -550,16 +551,9 @@ function renderHome(){
   </div>`;
 }
 
-function renderGloss(){
+function glossCardsHTML(){
   const q=S.gSearch.toLowerCase(),f=S.gFilter;
   const filtered=TERMS.filter(t=>(f==='all'||t.family===f)&&(!q||t.name.toLowerCase().includes(q)||t.full.toLowerCase().includes(q)||(t.d2t||'').toLowerCase().includes(q)));
-  const filterDefs=[{k:'all',label:'Tout'},{k:'eval',label:'📊 Éval'},{k:'model',label:'🤖 Modèles'},{k:'classif',label:'🏷️ Classif.'},{k:'summary',label:'📋 Summary'},{k:'libs',label:'📦 Libs'},{k:'choose',label:'🧭 Choisir'}];
-  const filtersHTML=filterDefs.map(fd=>{
-    const active=S.gFilter===fd.k;
-    const accent=fd.k==='all'?'var(--primary)':famColor(fd.k);
-    const soft=fd.k==='all'?'var(--primary-soft)':famSoft(fd.k);
-    return `<button onclick="APP.setGFilter('${fd.k}')" style="flex:none;border:1.5px solid ${active?accent:'var(--line-2)'};background:${active?soft:'var(--card)'};color:${active?accent:'var(--ink-2)'};border-radius:30px;padding:7px 14px;font:700 12.5px 'Hanken Grotesk',sans-serif;cursor:pointer;white-space:nowrap;">${fd.label}</button>`;
-  }).join('');
   const cardsHTML=filtered.map(t=>{
     const fi=FAM[t.family]||FAM.eval;
     const c=famColor(t.family);const so=famSoft(t.family);
@@ -579,17 +573,26 @@ function renderGloss(){
       ${t.tip?`<div style="margin-top:11px;background:var(--good-soft);border-left:3px solid var(--good-bd);border-radius:9px;padding:9px 11px;font:600 12px 'Hanken Grotesk',sans-serif;color:var(--good-ink);line-height:1.5;">💡 ${h(t.tip)}</div>`:''}
     </div>`;
   }).join('');
+  return cardsHTML||`<div style="text-align:center;color:var(--ink-3);padding:40px 0;font:600 14px 'Hanken Grotesk',sans-serif;">Aucun terme trouvé.</div>`;
+}
+
+function renderGloss(){
+  const filterDefs=[{k:'all',label:'Tout'},{k:'eval',label:'📊 Éval'},{k:'model',label:'🤖 Modèles'},{k:'classif',label:'🏷️ Classif.'},{k:'summary',label:'📋 Summary'},{k:'libs',label:'📦 Libs'},{k:'choose',label:'🧭 Choisir'}];
+  const filtersHTML=filterDefs.map(fd=>{
+    const active=S.gFilter===fd.k;
+    const accent=fd.k==='all'?'var(--primary)':famColor(fd.k);
+    const soft=fd.k==='all'?'var(--primary-soft)':famSoft(fd.k);
+    return `<button onclick="APP.setGFilter('${fd.k}')" style="flex:none;border:1.5px solid ${active?accent:'var(--line-2)'};background:${active?soft:'var(--card)'};color:${active?accent:'var(--ink-2)'};border-radius:30px;padding:7px 14px;font:700 12.5px 'Hanken Grotesk',sans-serif;cursor:pointer;white-space:nowrap;">${fd.label}</button>`;
+  }).join('');
   return `<div class="anim-rise" style="padding-top:18px;">
     <div class="tab-title">Glossaire</div>
     <div class="tab-sub">Image mentale, seuils et astuce pour chaque terme.</div>
     <div style="position:relative;margin-top:14px;">
       <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.5;">🔍</span>
-      <input type="text" value="${h(S.gSearch)}" oninput="APP.setGSearch(this.value)" placeholder="Chercher… (RMSE, XGBoost, F1…)" style="width:100%;padding:13px 14px 13px 40px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--card);font:600 14px 'Hanken Grotesk',sans-serif;color:var(--ink);outline:none;">
+      <input id="gloss-search" type="text" value="${h(S.gSearch)}" oninput="APP.setGSearch(this.value)" placeholder="Chercher… (RMSE, XGBoost, F1…)" style="width:100%;padding:13px 14px 13px 40px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--card);font:600 14px 'Hanken Grotesk',sans-serif;color:var(--ink);outline:none;">
     </div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px;margin:0;">${filtersHTML}</div>
-    <div style="display:flex;flex-direction:column;gap:13px;margin-top:8px;">
-      ${cardsHTML||'<div style="text-align:center;color:var(--ink-3);padding:40px 0;font:600 14px \'Hanken Grotesk\',sans-serif;">Aucun terme trouvé.</div>'}
-    </div>
+    <div id="gloss-cards" style="display:flex;flex-direction:column;gap:13px;margin-top:8px;">${glossCardsHTML()}</div>
   </div>`;
 }
 
@@ -882,10 +885,24 @@ const APP={
     render();
   },
   signIn(){try{firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){flashSync('⚠️ Connexion impossible');}},
-  signOut(){try{firebase.auth().signOut();}catch(e){}},
+  signOut(){
+    const m=document.getElementById('abandon-modal');
+    m.style.display='';
+    m.innerHTML=`<div class="modal-overlay" onclick="APP.closeAbandon()">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div style="font:800 18px 'Baloo 2',cursive;color:var(--ink);">Se déconnecter ?</div>
+        <div style="font:600 13px 'Hanken Grotesk',sans-serif;color:var(--ink-2);margin-top:6px;line-height:1.5;">Ta progression locale sera conservée. La sync cloud sera désactivée.</div>
+        <div style="display:flex;gap:11px;margin-top:18px;">
+          <button onclick="APP.closeAbandon()" style="flex:1;border:1.5px solid var(--line-2);border-radius:14px;padding:13px;background:var(--card);color:var(--ink-2);font:700 13px 'Hanken Grotesk',sans-serif;cursor:pointer;">Annuler</button>
+          <button onclick="APP._doSignOut()" style="flex:1;border:none;border-radius:14px;padding:13px;background:var(--bad-bd);color:#fff;font:800 13px 'Baloo 2',cursive;cursor:pointer;">Déconnecter</button>
+        </div>
+      </div>
+    </div>`;
+  },
+  _doSignOut(){APP.closeAbandon();try{firebase.auth().signOut();}catch(e){}},
   retryLoad(){S.loadError=false;S.ready=false;render();init();},
   setTab(tab){
-    if(S.q.phase==='playing'&&S.tab==='quiz'&&tab!=='quiz'){S.pendingTab=tab;APP.showAbandon();return;}
+    if(S.q.phase==='playing'&&S.tab==='quiz'&&tab!=='quiz'){S.pendingTab=tab;APP.confirmAbandon();return;}
     clearInterval(_spdT);
     if(tab==='quiz'&&S.q.phase==='ended'){S.q=Object.assign({},S.q,{phase:'select'});}
     S.tab=tab;S.dictOpen=false;
@@ -893,12 +910,30 @@ const APP={
     render();
   },
   goRealm(fam){S.gFilter=fam;S.gSearch='';S.tab='gloss';render();},
-  setGFilter(f){S.gFilter=f;render();},
-  setGSearch(v){S.gSearch=v;render();},
+  setGFilter(f){
+    S.gFilter=f;
+    const el=document.getElementById('gloss-cards');
+    if(el){el.innerHTML=glossCardsHTML();}else render();
+  },
+  setGSearch(v){
+    S.gSearch=v;
+    const el=document.getElementById('gloss-cards');
+    if(el){el.innerHTML=glossCardsHTML();}else render();
+    // Keep input focused with cursor at end
+    const inp=document.getElementById('gloss-search');
+    if(inp&&document.activeElement!==inp){inp.focus();inp.setSelectionRange(v.length,v.length);}
+  },
   // Quiz
   launchSession(mode){
     clearInterval(_spdT);
     const queue=buildQueue(mode);
+    if(!queue.length){
+      // No questions available for this mode — show user-friendly error
+      const c=document.getElementById('content');
+      if(c){const warn=c.querySelector('#mode-warn');if(!warn){const d=document.createElement('div');d.id='mode-warn';d.style.cssText='background:var(--warn-soft);border:1px solid var(--warm-bd);border-radius:14px;padding:11px 13px;margin-top:13px;font:600 12px \'Hanken Grotesk\',sans-serif;color:var(--warn-ink);';d.textContent='⚠️ Aucune question disponible pour ce mode. Vérifie que le Google Sheet est bien publié (Fichier → Partager → Publier).';c.querySelector('.anim-rise')?.prepend(d);}}
+      return;
+    }
+    S.tab='quiz';
     S.q={phase:'playing',mode,queue,idx:0,cur:makeCur(queue,0),answered:false,chosen:null,chosenBool:null,ok:false,lost:false,timeLeft:SPEED_TIME,cCorrect:0,cWrong:0,cStreak:0,mistakes:[],startedAt:Date.now(),bonusXp:0};
     S.dictOpen=false;
     saveSession();
